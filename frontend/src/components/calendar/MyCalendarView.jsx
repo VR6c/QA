@@ -323,7 +323,7 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
                   <Sparkles className="w-3 h-3 text-blue-300" />
                   Agenda
                 </span>
-                <span className="text-[11px] font-mono font-medium text-slate-300 bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                <span className="text-[12px] font-mono font-medium text-slate-300 bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
                   {selectedDateStr}
                 </span>
               </div>
@@ -387,39 +387,39 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
                     {/* Status Accent Bar on Left */}
                     <div className={`absolute top-0 left-0 bottom-0 w-1 ${statusInfo.bar}`} />
 
-                    {/* Card Top Row: Status Badge & PushTo Environment */}
+                    {/* Card Title */}
+                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2 pl-1.5">
+                      {t.title}
+                    </h4>
+
+                    {/* Card Row: Status Badge & PushTo Environment */}
                     <div className="flex items-center justify-between gap-2 pl-1.5">
                       <span
-                        className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${statusInfo.bg}`}
+                        className={`inline-flex items-center gap-1 text-[8px] font-extrabold px-2 py-0.5 rounded-md border ${statusInfo.bg}`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
                         {statusInfo.label}
                       </span>
 
                       {t.pushTo && (
-                        <span className="text-[10px] font-semibold font-mono text-slate-500 bg-slate-100 group-hover:bg-blue-100/60 group-hover:text-blue-700 px-2 py-0.5 rounded-md transition-colors truncate max-w-[90px]">
+                        <span className="text-[8px] font-semibold font-mono text-slate-500 bg-slate-100 group-hover:bg-blue-100/60 group-hover:text-blue-700 px-2 py-0.5 rounded-md transition-colors truncate max-w-[90px]">
                           {t.pushTo}
                         </span>
                       )}
                     </div>
 
-                    {/* Card Title */}
-                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2 pl-1.5">
-                      {t.title}
-                    </h4>
-
                     {/* Card Footer: Owner Tag & Dev Deadline if present */}
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 pl-1.5">
+                    <div className="flex items-center justify-between text-[8px] text-slate-500 pt-1 border-t border-slate-100/80 pl-1.5">
                       <div className="flex items-center gap-1 text-slate-600 font-medium">
-                        <div className="w-4 h-4 rounded-full bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-600 flex items-center justify-center font-bold text-[9px]">
+                        <div className="w-3 h-3 rounded-full bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-600 flex items-center justify-center font-bold text-[8px]">
                           {(t.owner || 'U')[0].toUpperCase()}
                         </div>
                         <span className="truncate max-w-[100px]">{t.owner || 'Unassigned'}</span>
                       </div>
 
                       {t.dateLineDev && (
-                        <span className="flex items-center gap-1 font-mono text-[9.5px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60">
-                          <Clock className="w-2.5 h-2.5 text-amber-500" />
+                        <span className="flex items-center gap-1 font-mono text-[8px] text-amber-600 font-semibold bg-amber-50 px-1 py-0.5 rounded border border-amber-200/60">
+                          <Clock className="w-2 h-2 text-amber-500" />
                           {t.dateLineDev.substring(5, 16)}
                         </span>
                       )}

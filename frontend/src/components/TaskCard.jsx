@@ -94,65 +94,70 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
         {/* Main Content */}
         <div className="flex-1 min-w-0 space-y-2">
 
+          {/* Title */}
+          <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug tracking-tight group-hover:text-blue-600 transition-colors">
+            {task.title}
+          </h4>
+
           {/* Metadata Row (Date, Owner, Push To Environment & IMP Flow & KPI Badge) */}
-          <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+          <div className="flex items-center gap-1 flex-wrap text-[8px]">
             {formattedDate && (
-              <span className="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-md">
-                <Calendar className="w-3 h-3 text-slate-500" />
+              <span className="inline-flex items-center gap-1 font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-1 py-0.5 rounded text-[8px]">
+                <Calendar className="w-2 h-2 text-slate-500" />
                 {formattedDate}
               </span>
             )}
 
             {/* Developer Dateline Badge */}
             {task.datelineDeveloper && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-200" title={`DateLine From Developer: ${task.datelineDeveloper}`}>
-                <Calendar className="w-2.5 h-2.5 text-amber-600" />
+              <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold text-[8px] bg-amber-50 text-amber-800 border border-amber-200" title={`DateLine From Developer: ${task.datelineDeveloper}`}>
+                <Calendar className="w-2 h-2 text-amber-600" />
                 <span>Dev: {task.datelineDeveloper}</span>
               </span>
             )}
 
             {/* Testing Dateline Badge */}
             {task.datelineTesting && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-blue-50 text-blue-800 border border-blue-200" title={`DateLine Testing: ${task.datelineTesting}`}>
-                <Calendar className="w-2.5 h-2.5 text-blue-600" />
+              <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold text-[8px] bg-blue-50 text-blue-800 border border-blue-200" title={`DateLine Testing: ${task.datelineTesting}`}>
+                <Calendar className="w-2 h-2 text-blue-600" />
                 <span>Testing: {task.datelineTesting}</span>
               </span>
             )}
 
             {/* Task Owner Title Badge */}
             {task.owner && task.owner !== 'Unassigned' && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-blue-100 text-blue-900 border border-blue-200" title={`Owner Title: ${task.owner}${task.user ? ` (Logged by ${task.user})` : ''}`}>
-                <User className="w-2.5 h-2.5 opacity-90 text-blue-700" />
+              <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold text-[8px] bg-blue-100 text-blue-900 border border-blue-200" title={`Owner Title: ${task.owner}${task.user ? ` (Logged by ${task.user})` : ''}`}>
+                <User className="w-2 h-2 opacity-90 text-blue-700" />
                 <span>{task.owner}</span>
               </span>
             )}
 
             {/* Optional Task User Badge (Reporter if different) */}
             {task.user && task.user !== 'Unassigned' && task.user !== task.owner && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-semibold text-[10px] bg-slate-100 text-slate-700 border border-slate-200" title={`Task Logger / Reporter: ${task.user}`}>
+              <span className="inline-flex items-center gap-1 px-1 py-0.5 rounded font-semibold text-[8px] bg-slate-100 text-slate-700 border border-slate-200" title={`Task Logger / Reporter: ${task.user}`}>
                 <span>by {task.user}</span>
               </span>
             )}
 
-            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold border text-[10px] ${envStyles[task.pushTo] || 'bg-slate-100 text-slate-800'}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${envDotColors[task.pushTo] || 'bg-slate-500'}`} />
+            <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold border text-[8px] ${envStyles[task.pushTo] || 'bg-slate-100 text-slate-800'}`}>
+              <span className={`w-1 h-1 rounded-full ${envDotColors[task.pushTo] || 'bg-slate-500'}`} />
               {task.pushTo}
             </span>
 
             {/* KPI Category Badge */}
             {kpiMeta && (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-extrabold border text-[10px] ${kpiMeta.badgeBg}`}>
-                <Award className="w-2.5 h-2.5" />
+              <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded font-extrabold border text-[8px] ${kpiMeta.badgeBg}`}>
+                <Award className="w-2 h-2" />
                 {kpiMeta.shortName}
               </span>
             )}
 
             {task.flowType && task.flowType !== 'none' && (
-              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold border text-[10px] ${task.flowType === 'monthly' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
+              <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold border text-[8px] ${task.flowType === 'monthly' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
                   task.flowType === 'weekly' ? 'bg-cyan-100 text-cyan-800 border-cyan-200' :
                     'bg-purple-100 text-purple-800 border-purple-200'
                 }`}>
-                <Tag className="w-2.5 h-2.5 opacity-80" />
+                <Tag className="w-2 h-2 opacity-80" />
                 {task.flowType === 'monthly' && 'Monthly'}
                 {task.flowType === 'weekly' && 'Weekly'}
                 {task.flowType === 'yearly' && 'Yearly'}
@@ -160,11 +165,6 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
               </span>
             )}
           </div>
-
-          {/* Title */}
-          <h4 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug tracking-tight group-hover:text-blue-600 transition-colors">
-            {task.title}
-          </h4>
 
           {/* Reason / Notes Snippet */}
           {task.reason && (
