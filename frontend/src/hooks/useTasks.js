@@ -21,7 +21,9 @@ export function useTasks() {
         id: String(t.id || t._id)
       }));
     },
-    staleTime: 30000
+    staleTime: 30000,
+    retry: 1,
+    retryDelay: 1000
   });
 
 

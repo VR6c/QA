@@ -9,6 +9,19 @@ export const seedSuperAdminData = async () => {
   try {
     console.log('🌱 Checking Super Admin Panel seed data...');
 
+    // 0. Fast existence check to skip heavy seed operations on serverless cold starts
+    const [hasPerms, hasRoles, hasSuperAdmin, hasSettings] = await Promise.all([
+      Permission.exists({ code: 'user.view' }),
+      Role.exists({ code: 'super_admin' }),
+      User.exists({ role: 'Super Admin' }),
+      Setting.exists({ key: 'system_name' })
+    ]);
+
+    if (hasPerms && hasRoles && hasSuperAdmin && hasSettings) {
+      console.log('⚡ Super Admin seed data already initialized. Skipping redundant seed.');
+      return;
+    }
+
     // 1. Seed Permissions
     const permissionsData = [
       { name: 'View Users', code: 'user.view', module: 'User Management', action: 'view', description: 'View user list and profile details' },
@@ -31,13 +44,9 @@ export const seedSuperAdminData = async () => {
       { name: 'View Activity Log', code: 'activity.view', module: 'Activity Log', action: 'view', description: 'View and search audit logs' }
     ];
 
-    for (const p of permissionsData) {
-      await Permission.findOneAndUpdate(
-        { code: p.code },
-        p,
-        { upsert: true, new: true }
-      );
-    }
+    await Promise.all(permissionsData.map(p => 
+      Permission.findOneAndUpdate({ code: p.code }, p, { upsert: true, new: true })
+    ));
     console.log('  └─ Permissions updated/seeded.');
 
     const allPermissionCodes = permissionsData.map(p => p.code);
@@ -171,13 +180,9 @@ export const seedSuperAdminData = async () => {
       { key: 'reports_module', name: 'Executive Analytics & Reports', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable executive KPI reporting views' }
     ];
 
-    for (const s of settingsData) {
-      await Setting.findOneAndUpdate(
-        { key: s.key },
-        s,
-        { upsert: true, new: true }
-      );
-    }
+    await Promise.all(settingsData.map(s =>
+      Setting.findOneAndUpdate({ key: s.key }, s, { upsert: true, new: true })
+    ));
     console.log('  └─ System settings seeded.');
 
     // 5. Seed Initial Audit Logs if empty

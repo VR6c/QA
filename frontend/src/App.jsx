@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
 
 function ControlCenterApp() {
   const { tasks, isLoading, isFetching, error, refetch, createTask, updateTask, deleteTask, updateStatus } = useTasks();
-  const showSkeleton = isLoading || isFetching;
+  const showSkeleton = (isLoading || isFetching) && !error;
   const { owners, createOwner, updateOwner, deleteOwner } = useOwners();
 
   const checkAuth = useAuthStore((state) => state.checkAuth);

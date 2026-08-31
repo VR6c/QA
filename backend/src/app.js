@@ -81,10 +81,13 @@ export const connectMongo = async () => {
           await seedSuperAdminData();
           isConnected = true;
         }
+        return;
       } catch (fallbackErr) {
         console.error(`❌ Local MongoDB Fallback failed: ${fallbackErr.message}`);
+        throw fallbackErr;
       }
     }
+    throw err;
   }
 };
 
