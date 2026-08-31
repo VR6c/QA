@@ -192,9 +192,8 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
           <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 flex-1 sm:flex-initial justify-between sm:justify-start">
             <button
               onClick={() => setViewMode('month')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${
-                viewMode === 'month' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'month' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <Grid className="w-3.5 h-3.5" />
               Month
@@ -202,9 +201,8 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
 
             <button
               onClick={() => setViewMode('week')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${
-                viewMode === 'week' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'week' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <Columns className="w-3.5 h-3.5" />
               Week
@@ -212,9 +210,8 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
 
             <button
               onClick={() => setViewMode('day')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${
-                viewMode === 'day' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'day' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               <ListFilter className="w-3.5 h-3.5" />
               Day
@@ -240,19 +237,6 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
               <Filter className="w-3.5 h-3.5 text-slate-400" />
               Filters:
             </div>
-
-            {/* Quick Toggle: My Tasks Only */}
-            <button
-              onClick={() => setMyTasksOnly(!myTasksOnly)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
-                myTasksOnly
-                  ? 'bg-blue-50 text-blue-700 border-blue-300 shadow-2xs'
-                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-              }`}
-            >
-              <User className="w-3.5 h-3.5" />
-              My Tasks Only
-            </button>
           </div>
 
           <div className="grid grid-cols-1 xs:grid-cols-2 sm:flex sm:items-center gap-2.5 w-full sm:w-auto">
@@ -363,13 +347,12 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
                 >
                   <div className="flex items-center justify-between">
                     <span
-                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${
-                        t.status === 'done'
+                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${t.status === 'done'
                           ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                           : t.status === 'testing'
-                          ? 'bg-amber-100 text-amber-800 border-amber-200'
-                          : 'bg-blue-100 text-blue-800 border-blue-200'
-                      }`}
+                            ? 'bg-amber-100 text-amber-800 border-amber-200'
+                            : 'bg-blue-100 text-blue-800 border-blue-200'
+                        }`}
                     >
                       {t.status}
                     </span>
