@@ -32,8 +32,9 @@ export default function AdminDashboard({ onNavigate }) {
       });
       if (!res.ok) throw new Error('Failed to load dashboard metrics');
       const data = await res.json();
-      setStats(data.stats);
-      setRecentActivities(data.recentActivities || []);
+      const payload = data.data || data;
+      setStats(payload.stats || null);
+      setRecentActivities(payload.recentActivities || []);
     } catch (err) {
       console.error(err);
       toast.error('Could not fetch dashboard statistics');

@@ -37,7 +37,7 @@ export default function SystemSettings() {
       });
       if (!res.ok) throw new Error('Failed to load system settings');
       const data = await res.json();
-      setCategories(data.categories || {});
+      setCategories(data.data?.categories || data.categories || {});
     } catch (err) {
       console.error(err);
       toast.error('Failed to load system configurations');
@@ -89,7 +89,10 @@ export default function SystemSettings() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update setting');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to update setting';
+        throw new Error(errorMsg);
+      }
 
       toast.success(`Setting '${setting.name}' updated`);
       setShowConfirmModal(false);

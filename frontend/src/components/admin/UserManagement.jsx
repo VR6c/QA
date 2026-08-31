@@ -132,9 +132,13 @@ export default function UserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create user');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to create user';
+        throw new Error(errorMsg);
+      }
 
-      toast.success(`User '${data.user.name}' created successfully`);
+      const createdUser = data.data || data.user || {};
+      toast.success(`User '${createdUser.name || formData.name}' created successfully`);
       setShowCreateModal(false);
       resetForm();
       fetchUsers();
@@ -158,9 +162,13 @@ export default function UserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update user');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to update user';
+        throw new Error(errorMsg);
+      }
 
-      toast.success(`User '${data.user.name}' updated successfully`);
+      const updatedUser = data.data || data.user || {};
+      toast.success(`User '${updatedUser.name || formData.name}' updated successfully`);
       setShowEditModal(false);
       fetchUsers();
     } catch (err) {
@@ -182,7 +190,10 @@ export default function UserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update status');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to update status';
+        throw new Error(errorMsg);
+      }
 
       toast.success(`User ${user.name} is now ${newStatus}`);
       fetchUsers();
@@ -201,7 +212,10 @@ export default function UserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete user');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to delete user';
+        throw new Error(errorMsg);
+      }
 
       toast.success(`User '${selectedUser.name}' soft-deleted`);
       setShowDeleteModal(false);
@@ -226,9 +240,13 @@ export default function UserManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to reset password');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to reset password';
+        throw new Error(errorMsg);
+      }
 
-      setTempResetPassword(data.temporary_password);
+      const resData = data.data || data;
+      setTempResetPassword(resData.temporary_password || data.temporary_password);
       toast.success('Password reset successfully');
     } catch (err) {
       toast.error(err.message);
@@ -247,7 +265,7 @@ export default function UserManagement() {
       });
       if (res.ok) {
         const data = await res.json();
-        setUserDetailData(data);
+        setUserDetailData(data.data || data);
       }
     } catch (err) {
       console.error(err);

@@ -93,9 +93,13 @@ export default function RoleManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create role');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to create role';
+        throw new Error(errorMsg);
+      }
 
-      toast.success(`Role '${data.role.name}' created successfully`);
+      const createdRole = data.data || data.role || {};
+      toast.success(`Role '${createdRole.name || roleForm.name}' created successfully`);
       setShowCreateModal(false);
       resetRoleForm();
       fetchRoles();
@@ -118,9 +122,13 @@ export default function RoleManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update role');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to update role';
+        throw new Error(errorMsg);
+      }
 
-      toast.success(`Role '${data.role.name}' updated successfully`);
+      const updatedRole = data.data || data.role || {};
+      toast.success(`Role '${updatedRole.name || roleForm.name}' updated successfully`);
       setShowEditModal(false);
       fetchRoles();
     } catch (err) {
@@ -141,7 +149,10 @@ export default function RoleManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to patch role status');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to patch role status';
+        throw new Error(errorMsg);
+      }
 
       toast.success(`Role '${role.name}' is now ${newStatus}`);
       fetchRoles();
@@ -159,7 +170,10 @@ export default function RoleManagement() {
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete role');
+      if (!res.ok) {
+        const errorMsg = data.error?.message || (typeof data.error === 'string' ? data.error : null) || 'Failed to delete role';
+        throw new Error(errorMsg);
+      }
 
       toast.success(`Role '${selectedRole.name}' deleted`);
       setShowDeleteModal(false);
