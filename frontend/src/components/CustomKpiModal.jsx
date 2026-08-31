@@ -50,30 +50,24 @@ export default function CustomKpiModal({ isOpen, onClose, owners = [], tasks = [
 
   const [selectedPerson, setSelectedPerson] = useState('');
 
-  // Default & lock selected person for regular users
+  // Set initial selected person
   useEffect(() => {
     if (isOpen) {
-      if (!isSuperAdmin && currentUser?.name) {
-        setSelectedPerson(currentUser.name);
-      } else if (currentUser?.name && ownerList.some(o => isUserOwnerMatch(o, currentUser.name))) {
-        const matchedName = ownerList.find(o => isUserOwnerMatch(o, currentUser.name)) || currentUser.name;
-        setSelectedPerson(matchedName);
-      } else if (!selectedPerson && ownerList.length > 0) {
+      if (!selectedPerson && ownerList.length > 0) {
         setSelectedPerson(ownerList[0]);
       }
     }
-  }, [isOpen, currentUser, ownerList, isSuperAdmin]);
+  }, [isOpen, ownerList, selectedPerson]);
 
   const modalPersonOptions = useMemo(() => {
     return ownerList.map((name) => {
       const isCustomized = !!personTargets[name.trim()];
-      const isMe = currentUser?.name && isUserOwnerMatch(currentUser.name, name);
       return {
         value: name,
-        label: `${name}${isMe ? ' (Your Auth Profile)' : ''} ${isCustomized ? '• (Custom Targets)' : '• (Standard 2026)'}`
+        label: `${name} ${isCustomized ? '• (Custom Targets)' : '• (Standard 2026)'}`
       };
     });
-  }, [ownerList, personTargets, currentUser]);
+  }, [ownerList, personTargets]);
 
   // Draft targets for the selected person: { [kpiId]: { goodTarget, excellenceTarget } }
   const [draftTargets, setDraftTargets] = useState({});

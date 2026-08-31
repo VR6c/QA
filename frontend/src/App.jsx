@@ -96,12 +96,11 @@ function ControlCenterApp() {
 
     return tasks.filter(task => {
 
-      // 0. Data Isolation Rule for Regular Users: View assigned, created, or unassigned tasks
+      // 0. Data Isolation Rule for Regular Users: View created/user account tasks, or unassigned tasks
       if (!isSuperAdmin && currentUser?.name) {
-        const isOwner = isUserOwnerMatch(task.owner, currentUser.name);
-        const isCreator = isUserOwnerMatch(task.user, currentUser.name);
-        const isUnassigned = isUserOwnerMatch(task.owner, 'Unassigned');
-        if (!isOwner && !isCreator && !isUnassigned) return false;
+        const isUserMatch = isUserOwnerMatch(task.user, currentUser.name);
+        const isUnassigned = !task.user || isUserOwnerMatch(task.user, 'Unassigned');
+        if (!isUserMatch && !isUnassigned) return false;
       }
 
       // 1. Search Query Filter (title, reason, remark)
@@ -123,10 +122,10 @@ function ControlCenterApp() {
         return false;
       }
 
-      // 4. Task Owner Filter
+      // 4. Task Owner Filter (Owner is treated as Remark / Tag)
       if (filters.owner && filters.owner !== 'all') {
         if (filters.owner === 'my_tasks') {
-          if (!currentUser?.name || !isUserOwnerMatch(task.owner, currentUser.name)) return false;
+          if (!currentUser?.name || !isUserOwnerMatch(task.user, currentUser.name)) return false;
         } else {
           if (!isUserOwnerMatch(task.owner, filters.owner)) return false;
         }

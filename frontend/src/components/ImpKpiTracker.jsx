@@ -73,25 +73,7 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
   const currentUser = useAuthStore((state) => state.user);
   const isSuperAdmin = currentUser?.role === 'Super Admin' || currentUser?.role === 'QA Lead' || currentUser?.role === 'Admin';
 
-  // Automatically lock KPI view filter for non-admin users to their own profile
-  React.useEffect(() => {
-    if (!isSuperAdmin && currentUser?.name) {
-      if (selectedPersonKpiFilter !== currentUser.name) {
-        setSelectedPersonKpiFilter(currentUser.name);
-      }
-    }
-  }, [isSuperAdmin, currentUser, selectedPersonKpiFilter, setSelectedPersonKpiFilter]);
-
   const personSelectOptions = useMemo(() => {
-    if (!isSuperAdmin && currentUser?.name) {
-      const isCustomized = !!personTargets[currentUser.name.trim()];
-      return [{
-        value: currentUser.name,
-        label: `${currentUser.name} (Your Profile)${isCustomized ? ' • (Custom)' : ''}`,
-        icon: <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-      }];
-    }
-
     const opts = [
       {
         value: 'all',
@@ -110,9 +92,9 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
     });
 
     return opts;
-  }, [tasks.length, ownerNames, personTargets, currentUser, isSuperAdmin]);
+  }, [tasks.length, ownerNames, personTargets]);
 
-  const activePerson = !isSuperAdmin && currentUser?.name ? currentUser.name : selectedPersonKpiFilter;
+  const activePerson = selectedPersonKpiFilter;
 
   // Filter tasks based on selected owner title for tracking
   const activeTasks = useMemo(() => {
