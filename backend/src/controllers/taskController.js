@@ -52,7 +52,7 @@ export const taskController = {
   // POST /api/tasks
   createTask: async (req, res) => {
     try {
-      const { title, status, pushTo, reason, timeline, remark, date, flowType, flowValue, kpiCategory, user, owner } = req.body;
+      const { title, status, pushTo, reason, timeline, remark, date, flowType, flowValue, kpiCategory, user, owner, datelineDeveloper, datelineTesting } = req.body;
       if (!title || typeof title !== 'string' || !title.trim()) {
         return sendError(res, 'Title is required', 400, 'ERR_VALIDATION');
       }
@@ -77,6 +77,8 @@ export const taskController = {
         remark: remark || '',
         date: date || '2026-08-01',
         due_date: req.body.due_date || date || null,
+        datelineDeveloper: datelineDeveloper || '',
+        datelineTesting: datelineTesting || '',
         delay_reason: req.body.delay_reason || '',
         flowType: flowType || 'none',
         flowValue: flowValue || '',

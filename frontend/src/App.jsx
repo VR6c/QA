@@ -179,6 +179,8 @@ function ControlCenterApp() {
     const headers = [
       'Task Title',
       'Date Created',
+      'DateLine Developer',
+      'DateLine Testing',
       'Owner',
       'Status',
       'Push-To Environment',
@@ -192,6 +194,8 @@ function ControlCenterApp() {
     const rows = tasks.map(t => [
       `"${(t.title || '').replace(/"/g, '""')}"`,
       `"${(t.date || '').replace(/"/g, '""')}"`,
+      `"${(t.datelineDeveloper || '').replace(/"/g, '""')}"`,
+      `"${(t.datelineTesting || '').replace(/"/g, '""')}"`,
       `"${(t.owner || 'Unassigned').replace(/"/g, '""')}"`,
       `"${(t.status || '').replace(/"/g, '""')}"`,
       `"${(t.pushTo || '').replace(/"/g, '""')}"`,

@@ -124,6 +124,8 @@ export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTas
     { key: 'owner', label: 'Owner', width: 'w-36 min-w-[130px]' },
     { key: 'kpiCategory', label: 'KPI Category', width: 'w-48 min-w-[180px]' },
     { key: 'date', label: 'Date', width: 'w-28 min-w-[100px]' },
+    { key: 'datelineDeveloper', label: 'DateLine Dev', width: 'w-32 min-w-[110px]' },
+    { key: 'datelineTesting', label: 'DateLine Testing', width: 'w-32 min-w-[110px]' },
     { key: 'status', label: 'Status', width: 'w-36 min-w-[130px]' },
     { key: 'pushTo', label: 'Push To', width: 'w-36 min-w-[130px]' },
     { key: 'reason', label: 'Reason / Notes', width: 'w-48 min-w-[160px]' },
@@ -244,6 +246,16 @@ export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTas
                 {/* 4. Date */}
                 <td className={`${cellPaddingClass} text-slate-600 font-medium whitespace-nowrap`}>
                   {task.date || '-'}
+                </td>
+
+                {/* 4b. DateLine Developer */}
+                <td className={`${cellPaddingClass} font-semibold whitespace-nowrap text-amber-700`}>
+                  {task.datelineDeveloper || '-'}
+                </td>
+
+                {/* 4c. DateLine Testing */}
+                <td className={`${cellPaddingClass} font-semibold whitespace-nowrap text-blue-700`}>
+                  {task.datelineTesting || '-'}
                 </td>
 
                 {/* 5. Status */}

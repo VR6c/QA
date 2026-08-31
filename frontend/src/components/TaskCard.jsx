@@ -94,6 +94,22 @@ export default function TaskCard({ task, onEdit, onDelete }) {
               </span>
             )}
 
+            {/* Developer Dateline Badge */}
+            {task.datelineDeveloper && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-amber-50 text-amber-800 border border-amber-200" title={`DateLine From Developer: ${task.datelineDeveloper}`}>
+                <Calendar className="w-2.5 h-2.5 text-amber-600" />
+                <span>Dev: {task.datelineDeveloper}</span>
+              </span>
+            )}
+
+            {/* Testing Dateline Badge */}
+            {task.datelineTesting && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-blue-50 text-blue-800 border border-blue-200" title={`DateLine Testing: ${task.datelineTesting}`}>
+                <Calendar className="w-2.5 h-2.5 text-blue-600" />
+                <span>Testing: {task.datelineTesting}</span>
+              </span>
+            )}
+
             {/* Task Owner Title Badge */}
             {task.owner && task.owner !== 'Unassigned' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] bg-blue-100 text-blue-900 border border-blue-200" title={`Owner Title: ${task.owner}${task.user ? ` (Logged by ${task.user})` : ''}`}>

@@ -85,6 +85,14 @@ const taskSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  datelineDeveloper: {
+    type: String,
+    default: ''
+  },
+  datelineTesting: {
+    type: String,
+    default: ''
+  },
   delay_reason: {
     type: String,
     default: ''

@@ -4,6 +4,7 @@ import {
   LuCalendar as CalendarIcon,
   LuChevronLeft as ChevronLeft,
   LuChevronRight as ChevronRight,
+  LuChevronDown as ChevronDown,
   LuClock as ClockIcon,
   LuX as XIcon,
   LuCheck as CheckIcon,
@@ -45,6 +46,73 @@ const toDate = (val) => {
   }
   return null;
 };
+
+// Custom Mini Dropdown for Month/Year/Time without native select triggers
+function CustomMiniDropdown({ value, options, onChange, dropUp = false, width = 'w-auto' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [isOpen]);
+
+  const selectedOpt = options.find((o) => String(o.value) === String(value)) || options[0];
+
+  return (
+    <div className="relative inline-block" ref={ref}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen);
+        }}
+        className="px-2 py-1 bg-slate-100/90 hover:bg-slate-200/90 text-slate-800 rounded-lg text-xs font-bold border border-slate-200/90 flex items-center gap-1 cursor-pointer transition-colors focus:ring-1 focus:ring-blue-500"
+      >
+        <span>{selectedOpt?.label || value}</span>
+        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isOpen ? 'rotate-180 text-blue-600' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div
+          className={`absolute ${dropUp ? 'bottom-full mb-1' : 'top-full mt-1'} left-1/2 -translate-x-1/2 z-[10000] bg-white border border-slate-200 rounded-xl shadow-xl py-1 max-h-44 overflow-y-auto min-w-[72px] animate-in fade-in zoom-in-95 duration-100 divide-y divide-slate-50 text-xs ${width}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {options.map((opt) => {
+            const isSelected = String(opt.value) === String(value);
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full text-left px-2.5 py-1.5 hover:bg-blue-50 transition-colors flex items-center justify-between font-medium cursor-pointer ${
+                  isSelected ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-700'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {isSelected && <CheckIcon className="w-3 h-3 text-blue-600 ml-1 shrink-0" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // Preset helper generators for range mode
 const GET_RANGE_PRESETS = (today = new Date()) => [
@@ -288,14 +356,28 @@ export default function CustomDatePicker({
     };
   }, [isOpen]);
 
-  // Sync internal month view when value changes from outside
+  // Sync internal month view when value changes from outside & sync time from date string
   useEffect(() => {
     if (mode === 'single' && singleDate) {
       setCurrentMonth(singleDate);
+      if (enableTime && value && typeof value === 'string' && (value.includes(':') || value.includes('T') || value.includes(' '))) {
+        const d = toDate(value);
+        if (d) {
+          let hours = d.getHours();
+          const minutes = d.getMinutes();
+          const period = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12 || 12;
+          setSelectedTime({
+            hours: String(hours).padStart(2, '0'),
+            minutes: String(minutes).padStart(2, '0'),
+            period
+          });
+        }
+      }
     } else if (mode === 'range' && rangeDate.from) {
       setCurrentMonth(rangeDate.from);
     }
-  }, [singleDate, rangeDate.from, mode]);
+  }, [singleDate, rangeDate.from, mode, value, enableTime]);
 
   // Days grid generation for current month view
   const daysInGrid = useMemo(() => {
@@ -316,8 +398,14 @@ export default function CustomDatePicker({
     if (disabled) return;
 
     if (mode === 'single') {
-      const formatted = format(day, 'yyyy-MM-dd');
-      onChange && onChange(formatted, day);
+      const dateStr = format(day, 'yyyy-MM-dd');
+      let h = parseInt(selectedTime.hours, 10);
+      if (selectedTime.period === 'PM' && h < 12) h += 12;
+      if (selectedTime.period === 'AM' && h === 12) h = 0;
+      const timeStr = `${String(h).padStart(2, '0')}:${selectedTime.minutes}`;
+      const fullVal = enableTime ? `${dateStr} ${timeStr}` : dateStr;
+
+      onChange && onChange(fullVal, day);
       if (!enableTime) setIsOpen(false);
     } else if (mode === 'range') {
       const { from, to } = rangeDate;
@@ -373,15 +461,22 @@ export default function CustomDatePicker({
 
     const formattedTime = `${String(h).padStart(2, '0')}:${updated.minutes}`;
     onTimeChange && onTimeChange(formattedTime);
+
+    if (mode === 'single' && enableTime) {
+      const baseDate = singleDate || new Date();
+      const dateStr = format(baseDate, 'yyyy-MM-dd');
+      const fullVal = `${dateStr} ${formattedTime}`;
+      onChange && onChange(fullVal, baseDate);
+    }
   };
 
   // Formatting display label for button
   const displayLabel = useMemo(() => {
     if (mode === 'single') {
       if (!singleDate) return null;
-      let labelStr = format(singleDate, 'PPP'); // e.g. "Aug 29th, 2026"
+      let labelStr = format(singleDate, 'MMM dd, yyyy');
       if (enableTime && selectedTime) {
-        labelStr += ` at ${selectedTime.hours}:${selectedTime.minutes} ${selectedTime.period}`;
+        labelStr += ` ${selectedTime.hours}:${selectedTime.minutes} ${selectedTime.period}`;
       }
       return labelStr;
     }
@@ -411,6 +506,33 @@ export default function CustomDatePicker({
 
   const presets = useMemo(() => GET_RANGE_PRESETS(new Date()), []);
   const isRTL = direction === 'rtl';
+
+  const hourOptions = useMemo(() => Array.from({ length: 12 }, (_, i) => {
+    const val = String(i + 1).padStart(2, '0');
+    return { value: val, label: val };
+  }), []);
+
+  const minuteOptions = useMemo(() => ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'].map(m => ({
+    value: m, label: m
+  })), []);
+
+  const periodOptions = useMemo(() => [
+    { value: 'AM', label: 'AM' },
+    { value: 'PM', label: 'PM' }
+  ], []);
+
+  const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, i) => ({
+    value: i,
+    label: format(new Date(2026, i, 1), 'MMMM')
+  })), []);
+
+  const yearOptions = useMemo(() => {
+    const cy = currentMonth.getFullYear();
+    return Array.from({ length: 11 }, (_, i) => {
+      const y = cy - 5 + i;
+      return { value: y, label: String(y) };
+    });
+  }, [currentMonth]);
 
   const popoverMenuContent = isOpen ? createPortal(
     <div
@@ -460,9 +582,26 @@ export default function CustomDatePicker({
               {isRTL ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </button>
 
-            <h3 className="text-sm font-bold text-slate-800 text-center flex-1">
-              {format(currentMonth, 'MMMM yyyy')}
-            </h3>
+            <div className="flex items-center gap-1.5 justify-center flex-1">
+              <CustomMiniDropdown
+                value={currentMonth.getMonth()}
+                options={monthOptions}
+                onChange={(mVal) => {
+                  const newD = new Date(currentMonth);
+                  newD.setMonth(parseInt(mVal, 10));
+                  setCurrentMonth(newD);
+                }}
+              />
+              <CustomMiniDropdown
+                value={currentMonth.getFullYear()}
+                options={yearOptions}
+                onChange={(yVal) => {
+                  const newD = new Date(currentMonth);
+                  newD.setFullYear(parseInt(yVal, 10));
+                  setCurrentMonth(newD);
+                }}
+              />
+            </div>
 
             <button
               type="button"
@@ -540,47 +679,47 @@ export default function CustomDatePicker({
 
           {/* Time Selector Footer (if enableTime is true) */}
           {enableTime && (
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-1.5 text-slate-500 font-medium">
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-1 text-xs">
+              <div className="flex items-center gap-1 text-slate-500 font-medium shrink-0">
                 <ClockIcon className="w-3.5 h-3.5 text-blue-500" />
                 <span>Time</span>
               </div>
 
               <div className="flex items-center gap-1">
-                {/* Hours Select */}
-                <select
+                {/* Custom Hours Dropdown */}
+                <CustomMiniDropdown
                   value={selectedTime.hours}
-                  onChange={(e) => handleTimeChange('hours', e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium"
-                >
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const val = String(i + 1).padStart(2, '0');
-                    return <option key={val} value={val}>{val}</option>;
-                  })}
-                </select>
+                  options={hourOptions}
+                  onChange={(val) => handleTimeChange('hours', val)}
+                  dropUp={true}
+                />
 
                 <span className="text-slate-400 font-bold">:</span>
 
-                {/* Minutes Select */}
-                <select
+                {/* Custom Minutes Dropdown */}
+                <CustomMiniDropdown
                   value={selectedTime.minutes}
-                  onChange={(e) => handleTimeChange('minutes', e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-xs text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-medium"
-                >
-                  {['00', '15', '30', '45'].map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+                  options={minuteOptions}
+                  onChange={(val) => handleTimeChange('minutes', val)}
+                  dropUp={true}
+                />
 
-                {/* AM/PM Select */}
-                <select
+                {/* Custom AM/PM Dropdown */}
+                <CustomMiniDropdown
                   value={selectedTime.period}
-                  onChange={(e) => handleTimeChange('period', e.target.value)}
-                  className="bg-slate-50 border border-slate-200 rounded-md px-1.5 py-1 text-xs font-semibold text-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                  options={periodOptions}
+                  onChange={(val) => handleTimeChange('period', val)}
+                  dropUp={true}
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="ml-1 p-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer shrink-0 shadow-xs"
+                  title="Done / Confirm"
                 >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
+                  <CheckIcon className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           )}

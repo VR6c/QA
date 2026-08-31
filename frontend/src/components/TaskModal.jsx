@@ -80,6 +80,8 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
   const [formData, setFormData] = useState({
     title: '',
     date: getTodayString(),
+    datelineDeveloper: '',
+    datelineTesting: '',
     status: 'backlog',
     pushTo: 'Development',
     user: currentUser?.name || 'Unassigned',
@@ -147,6 +149,8 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
       setFormData({
         title: task.title || '',
         date: task.date || today,
+        datelineDeveloper: task.datelineDeveloper || '',
+        datelineTesting: task.datelineTesting || '',
         status: task.status || 'backlog',
         pushTo: task.pushTo || 'Development',
         user: task.user || currentUser?.name || 'Unassigned',
@@ -162,6 +166,8 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
       setFormData({
         title: '',
         date: today,
+        datelineDeveloper: '',
+        datelineTesting: '',
         status: 'backlog',
         pushTo: 'Development',
         user: currentUser?.name || 'Unassigned',
@@ -280,6 +286,41 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
                 onChange={(val) => setFormData({ ...formData, status: val })}
                 size="sm"
                 variant="solid"
+              />
+            </div>
+          </div>
+
+          {/* DateLine From Developer & DateLine Testing */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50/70 p-3 rounded-xl border border-slate-200/80">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-amber-600" />
+                <span>DateLine From Developer</span>
+              </label>
+              <CustomDatePicker
+                mode="single"
+                enableTime={true}
+                value={formData.datelineDeveloper}
+                onChange={(val) => setFormData({ ...formData, datelineDeveloper: val })}
+                size="sm"
+                variant="solid"
+                placeholder="Pick dev dateline date & time"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-blue-600" />
+                <span>DateLine Testing</span>
+              </label>
+              <CustomDatePicker
+                mode="single"
+                enableTime={true}
+                value={formData.datelineTesting}
+                onChange={(val) => setFormData({ ...formData, datelineTesting: val })}
+                size="sm"
+                variant="solid"
+                placeholder="Pick testing dateline date & time"
               />
             </div>
           </div>
