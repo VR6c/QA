@@ -11,7 +11,7 @@ export function useTasks() {
     queryFn: async () => {
       const [response] = await Promise.all([
         api.getTasks(),
-        new Promise((resolve) => setTimeout(resolve, 600)) // 600ms minimum display time for Skeleton UI
+        new Promise((resolve) => setTimeout(resolve, 250)) // 250ms minimum display time for Skeleton UI
       ]);
 
 
