@@ -22,7 +22,6 @@ import { getAllKpis, getTaskKpiCategory, isUserOwnerMatch } from '../lib/kpiCons
 import useKPIStore from '../stores/kpiStore';
 import useAuthStore from '../stores/authStore';
 import CustomKpiModal from './CustomKpiModal';
-import { CustomSelect } from './ui';
 
 const iconMap = {
   Rocket,
@@ -74,37 +73,40 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
   const isSuperAdmin = currentUser?.role === 'Super Admin' || currentUser?.role === 'QA Lead' || currentUser?.role === 'Admin';
 
   const personSelectOptions = useMemo(() => {
-    const opts = [
-      {
-        value: 'all',
-        label: `All Team Members (${tasks.length} tasks)`,
-        icon: <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-      }
-    ];
-
-    ownerNames.forEach(name => {
-      const isCustomized = !!personTargets[name.trim()];
-      opts.push({
-        value: name,
-        label: `${name}${isCustomized ? ' (Customized)' : ''}`,
-        icon: <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-      });
-    });
-
-    return opts;
-  }, [tasks.length, ownerNames, personTargets]);
-
-  const activePerson = selectedPersonKpiFilter;
-
-  // Filter tasks based on selected owner title for tracking
-  const activeTasks = useMemo(() => {
-    if (!activePerson || activePerson === 'all') {
-      return tasks;
+    const list = [...ownerNames];
+    if (currentUser?.name && !list.some(n => isUserOwnerMatch(n, currentUser.name))) {
+      list.unshift(currentUser.name);
     }
+
+    return list.map(name => {
+      const isCustomized = !!personTargets[name.trim()];
+      const isSelf = currentUser?.name && isUserOwnerMatch(name, currentUser.name);
+      return {
+        value: name,
+        label: `${name} ${isSelf ? '(My Personal Profile)' : ''}${isCustomized ? ' (Customized)' : ''}`,
+        icon: <User className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+      };
+    });
+  }, [ownerNames, personTargets, currentUser?.name]);
+
+  // Active person for Personal KPI tracking (defaults to currentUser or active owner)
+  const activePerson = useMemo(() => {
+    if (selectedPersonKpiFilter && selectedPersonKpiFilter !== 'all') {
+      return selectedPersonKpiFilter;
+    }
+    if (currentUser?.name && ownerNames.some(name => isUserOwnerMatch(name, currentUser.name))) {
+      return ownerNames.find(name => isUserOwnerMatch(name, currentUser.name)) || currentUser.name;
+    }
+    return ownerNames[0] || currentUser?.name || '';
+  }, [selectedPersonKpiFilter, currentUser?.name, ownerNames]);
+
+  // Filter tasks strictly for active personal KPI owner
+  const activeTasks = useMemo(() => {
+    if (!activePerson) return tasks;
     return tasks.filter(t => isUserOwnerMatch(t.owner, activePerson));
   }, [tasks, activePerson]);
 
-  // Compute KPI stats for active person/team
+  // Compute KPI stats for active person
   const kpiStats = useMemo(() => {
     return allKpiDefs.map((kpi, index) => {
       const matchingTasks = activeTasks.filter(t => getTaskKpiCategory(t) === kpi.id);
@@ -137,40 +139,7 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
     });
   }, [allKpiDefs, activeTasks, activePerson, getResolvedTarget]);
 
-  // Compute Team-wide Matrix data for all owner titles
-  const teamMatrixData = useMemo(() => {
-    return ownerNames.map(ownerName => {
-      const ownerTasks = tasks.filter(t => isUserOwnerMatch(t.owner, ownerName));
-
-
-      const kpisMap = {};
-      allKpiDefs.forEach(kpi => {
-        const matching = ownerTasks.filter(t => getTaskKpiCategory(t) === kpi.id);
-        const count = matching.length;
-        const targetInfo = getResolvedTarget(ownerName, kpi.id, kpi.goodTarget, kpi.excellenceTarget);
-
-        const isExcellence = count >= targetInfo.excellenceTarget && targetInfo.excellenceTarget > 0;
-        const isGood = !isExcellence && count >= targetInfo.goodTarget && targetInfo.goodTarget > 0;
-
-        kpisMap[kpi.id] = {
-          count,
-          goodTarget: targetInfo.goodTarget,
-          excellenceTarget: targetInfo.excellenceTarget,
-          isExcellence,
-          isGood,
-          isCustomized: targetInfo.isCustomized
-        };
-      });
-
-      return {
-        ownerName,
-        taskCount: ownerTasks.length,
-        kpisMap
-      };
-    });
-  }, [ownerNames, tasks, allKpiDefs, getResolvedTarget]);
-
-  // Compute Flow KPI contributions (Tasks tagged with Flow Type or Flow Value)
+  // Compute Flow KPI contributions for active person
   const flowKpiStats = useMemo(() => {
     const flowTasks = activeTasks.filter(t => t.flowType && t.flowType !== 'none');
 
@@ -189,7 +158,7 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-6">
 
-      {/* Header section with 2026 Goals branding & Custom KPI controls */}
+      {/* Header section with Personal KPI branding */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl text-white shadow-md relative overflow-hidden">
         {/* Glow effect overlay */}
         <div className="absolute -top-12 -right-12 w-44 h-44 bg-purple-500/15 rounded-full blur-2xl pointer-events-none" />
@@ -203,29 +172,29 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-black text-[10px] tracking-wider uppercase shadow-xs">
-                2026 Goals
+              <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-black text-[10px] tracking-wider uppercase shadow-xs">
+                Personal KPI
               </span>
               <h2 className="text-lg font-extrabold text-white tracking-tight flex items-center gap-1.5">
-                <span>KPI Target Tracker</span>
+                <span>{activePerson ? `${activePerson}'s Personal KPI` : 'Personal KPI Dashboard'}</span>
                 <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" />
               </h2>
             </div>
-
+            <p className="text-xs text-slate-300 font-medium mt-0.5">
+              Individual performance target metrics and progress tracker for {activePerson || 'User'}
+            </p>
           </div>
         </div>
 
-        {/* Action controls: Person Filter & Custom KPI Button */}
+        {/* Action controls: Self Set / Create KPI Button */}
         <div className="relative z-10 flex items-center gap-2.5 flex-wrap self-start lg:self-auto">
-
-
-          {/* Customize KPI Targets Button */}
+          {/* Self Set / Create KPI Button */}
           <button
             onClick={() => setIsCustomKpiModalOpen(true)}
             className="px-4 py-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl font-extrabold text-xs flex items-center gap-2 shadow-md hover:shadow-indigo-500/20 transition-all cursor-pointer border border-purple-400/30 active:scale-95"
           >
             <SlidersHorizontal className="w-4 h-4 text-purple-200" />
-            <span>Custom KPI per Person</span>
+            <span>Self Set / Create KPI</span>
           </button>
         </div>
       </div>
@@ -235,16 +204,39 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
         <div className="flex items-center gap-1.5 text-xs font-bold flex-wrap">
           <button
             onClick={() => setViewMode('cards')}
-            className={`px-3.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 font-extrabold ${viewMode === 'cards'
+            className={`px-3.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 font-extrabold ${
+              viewMode === 'cards'
                 ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/90 scale-[1.02]'
                 : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
-              }`}
+            }`}
           >
             <Target className="w-4 h-4 text-indigo-600" />
             <span>KPI Metric Cards</span>
           </button>
 
+          <button
+            onClick={() => setViewMode('team_matrix')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 font-extrabold ${
+              viewMode === 'team_matrix'
+                ? 'bg-white text-purple-700 shadow-xs border border-slate-200/90 scale-[1.02]'
+                : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
+            }`}
+          >
+            <Users className="w-4 h-4 text-purple-600" />
+            <span>Team Matrix</span>
+          </button>
 
+          <button
+            onClick={() => setViewMode('flow_kpis')}
+            className={`px-3.5 py-1.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center gap-2 font-extrabold ${
+              viewMode === 'flow_kpis'
+                ? 'bg-white text-blue-700 shadow-xs border border-slate-200/90 scale-[1.02]'
+                : 'text-slate-600 hover:bg-white/60 hover:text-slate-900'
+            }`}
+          >
+            <FlowIcon className="w-4 h-4 text-blue-600" />
+            <span>Flow KPIs</span>
+          </button>
         </div>
 
         {/* Executive summary pill */}

@@ -150,7 +150,7 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
         status: task.status || 'backlog',
         pushTo: task.pushTo || 'Development',
         user: task.user || currentUser?.name || 'Unassigned',
-        owner: task.owner || 'Unassigned',
+        owner: task.owner || currentUser?.name || 'Unassigned',
         reason: task.reason || '',
         timeline: task.timeline || '',
         remark: task.remark || '',
@@ -165,7 +165,7 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
         status: 'backlog',
         pushTo: 'Development',
         user: currentUser?.name || 'Unassigned',
-        owner: 'Unassigned',
+        owner: currentUser?.name || 'Unassigned',
         reason: '',
         timeline: '',
         remark: '',
@@ -284,7 +284,7 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
             </div>
           </div>
 
-          {/* Owner & Push To Environment */}
+          {/* Owner (Name Tag) & Push To Environment */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
             <div>
@@ -292,7 +292,7 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
                 <label className="block text-xs font-semibold text-slate-700">
                   Task Owner
                 </label>
-                {onOpenOwnerManager && (
+                {isSuperAdmin && onOpenOwnerManager && (
                   <button
                     type="button"
                     onClick={onOpenOwnerManager}
@@ -340,8 +340,6 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
               Categorizing this task directly tracks your progress against 2026 Goal targets.
             </p>
           </div>
-
-
 
           {/* Reason / Notes */}
           <div>

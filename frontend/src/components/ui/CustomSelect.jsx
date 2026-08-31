@@ -34,7 +34,9 @@ export default function CustomSelect({
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
 
-  const selectedOption = options.find((opt) => opt.value === value);
+  const selectedOption = options.find((opt) => opt.value === value) ||
+    (value ? options.find((opt) => String(opt.value).toLowerCase() === String(value).toLowerCase()) : null) ||
+    (value ? options.find((opt) => String(opt.label).toLowerCase().includes(String(value).toLowerCase())) : null);
 
   const filteredOptions = isSearchable && searchQuery
     ? options.filter((opt) =>

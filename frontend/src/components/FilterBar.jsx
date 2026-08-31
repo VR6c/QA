@@ -91,6 +91,7 @@ export default function FilterBar({
     ];
     return [
       { value: 'all', label: 'All Owners' },
+      { value: 'my_tasks', label: 'My Tasks' },
       ...list.map(o => ({ value: o.name, label: o.name }))
     ];
   }, [owners]);
@@ -106,7 +107,8 @@ export default function FilterBar({
       active.push({ key: 'status', label: `Status: ${label}`, clear: () => setFilters({ status: 'all' }) });
     }
     if (filters.owner && filters.owner !== 'all') {
-      active.push({ key: 'owner', label: `Owner: ${filters.owner}`, clear: () => setFilters({ owner: 'all' }) });
+      const ownerLabel = filters.owner === 'my_tasks' ? 'My Tasks' : filters.owner;
+      active.push({ key: 'owner', label: `Owner: ${ownerLabel}`, clear: () => setFilters({ owner: 'all' }) });
     }
     if (filters.environment && filters.environment !== 'all') {
       active.push({ key: 'environment', label: `Env: ${filters.environment}`, clear: () => setFilters({ environment: 'all' }) });
@@ -123,7 +125,7 @@ export default function FilterBar({
       });
     }
     return active;
-  }, [filters, setFilters]);
+  }, [filters, setFilters, kpiFilterOptions]);
 
   const hasActiveFilters = activeFilters.length > 0;
 
@@ -148,8 +150,7 @@ export default function FilterBar({
       setFilters({ dateStart: start, dateEnd: end });
     } else if (preset === 'month') {
       const start = format(startOfMonth(today), 'yyyy-MM-dd');
-      const end = format(endOfMonth(today), 'yyyy-MM-dd');
-      setFilters({ dateStart: start, dateEnd: end });
+      setFilters({ dateStart: start, dateEnd: format(endOfMonth(today), 'yyyy-MM-dd') });
     } else if (preset === '30days') {
       const start = format(subDays(today, 29), 'yyyy-MM-dd');
       const end = format(today, 'yyyy-MM-dd');

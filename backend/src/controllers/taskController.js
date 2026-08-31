@@ -11,6 +11,25 @@ export const taskController = {
   getAllTasks: async (req, res) => {
     try {
       const query = {};
+
+      const isSuperAdmin = req.user && ['Super Admin', 'Admin', 'QA Lead'].includes(req.user.role);
+
+      // Data Isolation Rule for Regular Authenticated Users: Only return tasks created by (user) or assigned to (owner) req.user
+      if (!isSuperAdmin && req.user?.name) {
+        const uName = req.user.name.trim();
+        const flexNameRegex = new RegExp(escapeRegex(uName), 'i');
+        
+        const userOrConditions = [
+          { user: flexNameRegex },
+          { owner: flexNameRegex }
+        ];
+        if (req.user.email) {
+          const flexEmailRegex = new RegExp(escapeRegex(req.user.email.trim()), 'i');
+          userOrConditions.push({ user: flexEmailRegex }, { owner: flexEmailRegex });
+        }
+        query.$or = userOrConditions;
+      }
+
       if (req.query.user) {
         query.user = { $regex: new RegExp(`^${escapeRegex(req.query.user.trim())}$`, 'i') };
       }
@@ -63,7 +82,7 @@ export const taskController = {
         flowValue: flowValue || '',
         kpiCategory: kpiCategory || 'none',
         user: user || req.user?.name || 'Unassigned',
-        owner: owner || 'Unassigned',
+        owner: owner || req.user?.name || 'Unassigned',
         completed_at: isTerminal ? new Date() : null
       });
 
@@ -102,6 +121,16 @@ export const taskController = {
       const currentTask = await Task.findById(id);
       if (!currentTask) {
         return sendError(res, `Task with ID ${id} not found`, 404, 'ERR_NOT_FOUND');
+      }
+
+      const isSuperAdmin = req.user && ['Super Admin', 'Admin', 'QA Lead'].includes(req.user.role);
+      if (!isSuperAdmin && req.user?.name) {
+        const uName = req.user.name.toLowerCase().trim();
+        const tUser = (currentTask.user || '').toLowerCase().trim();
+        const tOwner = (currentTask.owner || '').toLowerCase().trim();
+        if (!tUser.includes(uName) && !uName.includes(tUser) && !tOwner.includes(uName) && !uName.includes(tOwner)) {
+          return sendError(res, 'Access denied. You can only update your own tasks.', 403, 'ERR_FORBIDDEN');
+        }
       }
 
       const oldValueSnapshot = {
@@ -185,11 +214,23 @@ export const taskController = {
   deleteTask: async (req, res) => {
     try {
       const { id } = req.params;
-      const task = await Task.findByIdAndDelete(id);
+      const currentTask = await Task.findById(id);
 
-      if (!task) {
+      if (!currentTask) {
         return sendError(res, `Task with ID ${id} not found`, 404, 'ERR_NOT_FOUND');
       }
+
+      const isSuperAdmin = req.user && ['Super Admin', 'Admin', 'QA Lead'].includes(req.user.role);
+      if (!isSuperAdmin && req.user?.name) {
+        const uName = req.user.name.toLowerCase().trim();
+        const tUser = (currentTask.user || '').toLowerCase().trim();
+        const tOwner = (currentTask.owner || '').toLowerCase().trim();
+        if (!tUser.includes(uName) && !uName.includes(tUser) && !tOwner.includes(uName) && !uName.includes(tOwner)) {
+          return sendError(res, 'Access denied. You can only delete your own tasks.', 403, 'ERR_FORBIDDEN');
+        }
+      }
+
+      const task = await Task.findByIdAndDelete(id);
 
       recordActivity({
         req,

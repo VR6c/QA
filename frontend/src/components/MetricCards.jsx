@@ -32,7 +32,7 @@ export default function MetricCards({ tasks = [] }) {
     {
       label: 'Done Rate',
       value: `${doneRate}%`,
-      hint: `${done} of ${total} shipped`,
+      hint: `${done} of ${total} tasks completed`,
       icon: CheckCircle2,
       iconBg: 'bg-emerald-50 text-emerald-600',
       ringColor: 'border-emerald-200',

@@ -50,24 +50,28 @@ export default function CustomKpiModal({ isOpen, onClose, owners = [], tasks = [
 
   const [selectedPerson, setSelectedPerson] = useState('');
 
-  // Set initial selected person
+  // Set initial selected person prioritizing current logged in user profile
   useEffect(() => {
     if (isOpen) {
-      if (!selectedPerson && ownerList.length > 0) {
+      if (currentUser?.name && ownerList.some(name => isUserOwnerMatch(name, currentUser.name))) {
+        const match = ownerList.find(name => isUserOwnerMatch(name, currentUser.name));
+        setSelectedPerson(match || currentUser.name);
+      } else if (!selectedPerson && ownerList.length > 0) {
         setSelectedPerson(ownerList[0]);
       }
     }
-  }, [isOpen, ownerList, selectedPerson]);
+  }, [isOpen, ownerList, currentUser?.name]);
 
   const modalPersonOptions = useMemo(() => {
     return ownerList.map((name) => {
       const isCustomized = !!personTargets[name.trim()];
+      const isSelf = currentUser?.name && isUserOwnerMatch(name, currentUser.name);
       return {
         value: name,
-        label: `${name} ${isCustomized ? '• (Custom Targets)' : '• (Standard 2026)'}`
+        label: `${name} ${isSelf ? '(You)' : ''} ${isCustomized ? '• (Custom Targets)' : '• (Standard 2026)'}`
       };
     });
-  }, [ownerList, personTargets]);
+  }, [ownerList, personTargets, currentUser?.name]);
 
   // Draft targets for the selected person: { [kpiId]: { goodTarget, excellenceTarget } }
   const [draftTargets, setDraftTargets] = useState({});
@@ -293,7 +297,7 @@ export default function CustomKpiModal({ isOpen, onClose, owners = [], tasks = [
                 }`}
             >
               <UserCheck className="w-4 h-4 text-purple-600" />
-              <span>1. User KPI Targets</span>
+              <span>1. Self Set Personal Targets</span>
             </button>
 
             <button
@@ -304,7 +308,7 @@ export default function CustomKpiModal({ isOpen, onClose, owners = [], tasks = [
                 }`}
             >
               <Plus className="w-4 h-4 text-purple-600" />
-              <span>2. KPI Category Definitions</span>
+              <span>2. Self Create KPI Categories</span>
             </button>
           </div>
 
@@ -340,78 +344,42 @@ export default function CustomKpiModal({ isOpen, onClose, owners = [], tasks = [
           {activeTab === 'person_targets' && (
             <div className="space-y-5">
 
-              {/* Manager Person Selector Card (Only Rendered for Super Admin / Managers) */}
-              {isSuperAdmin ? (
-                <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <label className="block text-slate-700 font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-purple-600" />
-                      <span>Select Person / QA Owner:</span>
-                    </label>
-                    <div className="w-72">
-                      <CustomSelect
-                        options={modalPersonOptions}
-                        value={selectedPerson}
-                        onChange={(val) => setSelectedPerson(val)}
-                        size="sm"
-                        variant="outline"
-                        className="font-bold text-xs"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    {hasCustomized ? (
-                      <span className="px-3 py-1.5 rounded-xl bg-purple-100 text-purple-800 border border-purple-200 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
-                        <Sparkles className="w-4 h-4 text-purple-600 animate-pulse" /> Custom Targets Active
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs">
-                        Standard 2026 Targets
-                      </span>
-                    )}
+              {/* Target Person Selector Card */}
+              <div className="bg-gradient-to-br from-white to-slate-50 border border-slate-200 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1">
+                  <label className="block text-slate-700 font-black text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <User className="w-4 h-4 text-purple-600" />
+                    <span>Target Profile / Personal Owner:</span>
+                  </label>
+                  <div className="w-72">
+                    <CustomSelect
+                      options={modalPersonOptions}
+                      value={selectedPerson}
+                      onChange={(val) => setSelectedPerson(val)}
+                      size="sm"
+                      variant="outline"
+                      className="font-bold text-xs"
+                    />
                   </div>
                 </div>
-              ) : (
-                /* Regular User Personal Profile Banner */
-                <div className="bg-gradient-to-r from-purple-50 via-indigo-50/60 to-blue-50 border border-purple-200/80 rounded-2xl p-4 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-xs">
-                      {(currentUser?.name || 'D').charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-sm font-black text-slate-900 tracking-tight">
-                          Personal Target Workspace: {selectedPerson}
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-md bg-purple-600 text-white font-extrabold text-[10px]">
-                          Your Profile
-                        </span>
-                        {userTaskCount === 0 && (
-                          <span className="px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-extrabold text-[10px] border border-amber-200">
-                            Empty Task Record (0 tasks logged)
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 font-medium mt-0.5">
-                        Customize your target milestone numbers for Good & Excellence KPI achievements
-                      </p>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    {hasCustomized ? (
-                      <span className="px-3 py-1 rounded-xl bg-purple-100 text-purple-800 border border-purple-200 font-extrabold text-xs flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Custom Targets Saved
-                      </span>
-                    ) : (
-                      <span className="px-3 py-1 rounded-xl bg-slate-100 text-slate-600 border border-slate-200 font-semibold text-xs">
-                        Standard 2026 Defaults (Unset)
-                      </span>
-                    )}
-                  </div>
+                <div className="flex items-center gap-2 self-start sm:self-auto">
+                  {currentUser?.name && isUserOwnerMatch(selectedPerson, currentUser.name) && (
+                    <span className="px-2.5 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-200 font-extrabold text-xs flex items-center gap-1">
+                      <User className="w-3.5 h-3.5 text-emerald-600" /> Your Personal Profile
+                    </span>
+                  )}
+                  {hasCustomized ? (
+                    <span className="px-3 py-1.5 rounded-xl bg-purple-100 text-purple-800 border border-purple-200 font-extrabold text-xs flex items-center gap-1.5 shadow-2xs">
+                      <Sparkles className="w-4 h-4 text-purple-600 animate-pulse" /> Self Targets Active
+                    </span>
+                  ) : (
+                    <span className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-xs">
+                      Standard 2026 Defaults
+                    </span>
+                  )}
                 </div>
-              )}
+              </div>
 
               {/* Targets Breakdown Matrix Table */}
               <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">

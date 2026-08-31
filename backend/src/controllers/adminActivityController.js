@@ -28,14 +28,12 @@ export const getActivities = async (req, res) => {
     const isAdmin = req.user && ['Super Admin', 'Admin', 'QA Lead'].includes(req.user.role);
 
     if (!isAdmin && req.user) {
-      const userIdentifier = req.user.name || req.user.email;
-      query.$or = [
-        { user_id: req.user.id },
-        { user_email: req.user.email },
-        { user_name: req.user.name },
-        { target_name: { $regex: userIdentifier, $options: 'i' } },
-        { description: { $regex: userIdentifier, $options: 'i' } }
-      ];
+      const userOrConditions = [];
+      if (req.user.id || req.user._id) userOrConditions.push({ user_id: String(req.user.id || req.user._id) });
+      if (req.user.email) userOrConditions.push({ user_email: req.user.email });
+      if (req.user.name) userOrConditions.push({ user_name: req.user.name });
+      
+      query.$or = userOrConditions.length > 0 ? userOrConditions : [{ user_id: 'impossible_id' }];
     } else if (user_id) {
       query.user_id = user_id;
     }
@@ -91,7 +89,7 @@ export const getActivities = async (req, res) => {
       ActivityLog.distinct('action'),
       ActivityLog.distinct('status'),
       Role.distinct('name'),
-      User.find({ deleted_at: null }, 'name email username role _id').lean()
+      isAdmin ? User.find({ deleted_at: null }, 'name email username role _id').lean() : Promise.resolve([])
     ]);
 
     const filterOptions = {
@@ -125,6 +123,17 @@ export const getActivityById = async (req, res) => {
     if (!activity) {
       return sendError(res, 'Activity record not found', 404, 'ERR_NOT_FOUND');
     }
+
+    const isAdmin = req.user && ['Super Admin', 'Admin', 'QA Lead'].includes(req.user.role);
+    if (!isAdmin && req.user) {
+      const isOwner = (req.user.id && String(activity.user_id) === String(req.user.id)) ||
+                      (req.user.email && activity.user_email === req.user.email) ||
+                      (req.user.name && activity.user_name === req.user.name);
+      if (!isOwner) {
+        return sendError(res, 'Access denied. You can only view your own activity records.', 403, 'ERR_FORBIDDEN');
+      }
+    }
+
     return sendSuccess(res, activity);
   } catch (error) {
     console.error('Error fetching activity log detail:', error);
