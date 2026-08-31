@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Production build outputs
+dist/
+dist-ssr/
+build/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+!*.env.example
+
+# Logs & Cache
+*.log
+.vite/
+.cache/
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
