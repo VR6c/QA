@@ -16,7 +16,9 @@ import TaskModal from './components/TaskModal';
 import OwnerManagementModal from './components/OwnerManagementModal';
 import LoginModal from './components/LoginModal';
 import CreateUserModal from './components/CreateUserModal';
+import ProfileModal from './components/ProfileModal';
 import SuperAdminShell from './components/admin/SuperAdminShell';
+
 import Footer from './components/Footer';
 import ViewSkeleton, { MetricCardsSkeleton, FilterBarSkeleton } from './components/ViewSkeleton';
 import { getTaskKpiCategory, isUserOwnerMatch } from './lib/kpiConstants';
@@ -341,11 +343,15 @@ function ControlCenterApp() {
       {/* Global Auth Login Modal */}
       <LoginModal />
 
+      {/* User Profile & Avatar Modal */}
+      <ProfileModal />
+
       {/* Super Admin Create User Modal */}
       <CreateUserModal
         isOpen={isCreateUserModalOpen}
         onClose={() => setIsCreateUserModalOpen(false)}
       />
+
 
       {/* Sonner Toast Container */}
       <Toaster position="bottom-right" richColors />

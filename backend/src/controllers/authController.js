@@ -234,3 +234,43 @@ export const triggerSeed = async (req, res) => {
     return sendError(res, error.message, 500, 'ERR_INTERNAL');
   }
 };
+
+// Update Current Logged-in User Profile
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, avatar } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return sendError(res, 'User not found.', 404, 'ERR_NOT_FOUND');
+    }
+
+    if (name !== undefined && name.trim()) {
+      user.name = name.trim();
+    }
+    if (avatar !== undefined) {
+      user.avatar = avatar;
+    }
+
+    user.updated_by = user.name;
+    await user.save();
+
+    recordActivity({
+      req,
+      userId: user._id.toString(),
+      userName: user.name,
+      userEmail: user.email,
+      roleName: user.role,
+      module: 'Authentication',
+      action: 'USER_PROFILE_UPDATE',
+      targetType: 'User',
+      targetId: user._id.toString(),
+      targetName: user.name,
+      description: `Updated profile details/avatar for ${user.name}`
+    });
+
+    return sendSuccess(res, { user: user.toJSON() }, null, 'Profile updated successfully!');
+  } catch (error) {
+    return sendError(res, error.message || 'Server error updating profile', 500, 'ERR_INTERNAL');
+  }
+};
+

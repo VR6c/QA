@@ -20,13 +20,17 @@ const useAuthStore = create((set, get) => ({
   isAuthenticated: !!localStorage.getItem(TOKEN_KEY),
   isLoading: false,
   isLoginModalOpen: false,
+  isProfileModalOpen: false,
   authMode: 'login', // 'login' | 'register'
   authError: null,
 
   openLoginModal: (mode = 'login') => set({ isLoginModalOpen: true, authMode: mode, authError: null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, authError: null }),
+  openProfileModal: () => set({ isProfileModalOpen: true, authError: null }),
+  closeProfileModal: () => set({ isProfileModalOpen: false }),
   setAuthMode: (mode) => set({ authMode: mode, authError: null }),
   clearError: () => set({ authError: null }),
+
 
   login: async (email, password) => {
     set({ isLoading: true, authError: null });
@@ -92,7 +96,28 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
+  updateProfile: async (profileData) => {
+    const token = get().token;
+    if (!token) throw new Error('Authentication token missing');
+    set({ isLoading: true, authError: null });
+    try {
+      const response = await api.updateProfile(profileData, token);
+      const payload = response.data || response;
+      const updatedUser = payload.user || response.user || payload;
+      if (updatedUser) {
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+        set({ user: updatedUser, isLoading: false, isProfileModalOpen: false });
+      }
+      return updatedUser;
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to update profile';
+      set({ isLoading: false, authError: errorMsg });
+      throw err;
+    }
+  },
+
   logout: () => {
+
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     set({

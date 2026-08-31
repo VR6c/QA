@@ -56,7 +56,24 @@ export const api = {
     return data;
   },
 
+  async updateProfile(profileData, token) {
+    const res = await fetch(`${AUTH_API_BASE}/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(profileData)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(extractError(data, 'Failed to update profile'));
+    }
+    return data;
+  },
+
   // Tasks API
+
   getAuthHeaders() {
     const token = localStorage.getItem('qa_control_center_token') || localStorage.getItem('token');
     const headers = { 'Content-Type': 'application/json' };
