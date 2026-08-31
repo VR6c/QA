@@ -274,3 +274,57 @@ export const updateProfile = async (req, res) => {
   }
 };
 
+// Change Logged-in User Password
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return sendError(res, 'Current password and new password are required.', 400, 'ERR_VALIDATION');
+    }
+
+    if (newPassword.length < 6) {
+      return sendError(res, 'New password must be at least 6 characters long.', 400, 'ERR_VALIDATION');
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return sendError(res, 'User not found.', 404, 'ERR_NOT_FOUND');
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return sendError(res, 'Current password is incorrect.', 400, 'ERR_INVALID_PASSWORD');
+    }
+
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return sendError(res, 'New password must be different from your current password.', 400, 'ERR_VALIDATION');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    user.updated_by = user.name;
+    await user.save();
+
+    recordActivity({
+      req,
+      userId: user._id.toString(),
+      userName: user.name,
+      userEmail: user.email,
+      roleName: user.role,
+      module: 'Authentication',
+      action: 'PASSWORD_CHANGE',
+      targetType: 'User',
+      targetId: user._id.toString(),
+      targetName: user.name,
+      description: `User ${user.name} changed their password successfully`
+    });
+
+    return sendSuccess(res, null, null, 'Password changed successfully!');
+  } catch (error) {
+    return sendError(res, error.message || 'Server error changing password', 500, 'ERR_INTERNAL');
+  }
+};
+
+

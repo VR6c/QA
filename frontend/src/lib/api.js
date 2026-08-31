@@ -72,6 +72,23 @@ export const api = {
     return data;
   },
 
+  async changePassword(passwordData, token) {
+    const res = await fetch(`${AUTH_API_BASE}/change-password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(passwordData)
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(extractError(data, 'Failed to change password'));
+    }
+    return data;
+  },
+
+
   // Tasks API
 
   getAuthHeaders() {

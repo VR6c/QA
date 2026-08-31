@@ -21,13 +21,15 @@ const useAuthStore = create((set, get) => ({
   isLoading: false,
   isLoginModalOpen: false,
   isProfileModalOpen: false,
+  activeProfileTab: 'profile', // 'profile' | 'password'
   authMode: 'login', // 'login' | 'register'
   authError: null,
 
   openLoginModal: (mode = 'login') => set({ isLoginModalOpen: true, authMode: mode, authError: null }),
   closeLoginModal: () => set({ isLoginModalOpen: false, authError: null }),
-  openProfileModal: () => set({ isProfileModalOpen: true, authError: null }),
+  openProfileModal: (tab = 'profile') => set({ isProfileModalOpen: true, activeProfileTab: tab, authError: null }),
   closeProfileModal: () => set({ isProfileModalOpen: false }),
+  setActiveProfileTab: (tab) => set({ activeProfileTab: tab }),
   setAuthMode: (mode) => set({ authMode: mode, authError: null }),
   clearError: () => set({ authError: null }),
 
@@ -115,6 +117,22 @@ const useAuthStore = create((set, get) => ({
       throw err;
     }
   },
+
+  changePassword: async (currentPassword, newPassword) => {
+    const token = get().token;
+    if (!token) throw new Error('Authentication token missing');
+    set({ isLoading: true, authError: null });
+    try {
+      const response = await api.changePassword({ currentPassword, newPassword }, token);
+      set({ isLoading: false });
+      return response;
+    } catch (err) {
+      const errorMsg = err.message || 'Failed to change password';
+      set({ isLoading: false, authError: errorMsg });
+      throw err;
+    }
+  },
+
 
   logout: () => {
 

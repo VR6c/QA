@@ -12,7 +12,8 @@ import {
   LuUserPlus as UserPlus,
   LuShieldAlert as ShieldAlert,
   LuActivity as ActivityIcon,
-  LuCamera as Camera
+  LuCamera as Camera,
+  LuKey as Key
 } from 'react-icons/lu';
 import { toast } from 'sonner';
 import useUIStore from '../stores/uiStore';
@@ -157,12 +158,23 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
                       <button
                         onClick={() => {
                           setUserMenuOpen(false);
-                          openProfileModal();
+                          openProfileModal('profile');
                         }}
                         className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
                       >
                         <Camera className="w-4 h-4 text-indigo-600" />
                         Edit Profile & Avatar
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          openProfileModal('password');
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Key className="w-4 h-4 text-amber-600" />
+                        Change Password
                       </button>
 
                       <button
