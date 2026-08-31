@@ -9,7 +9,8 @@ import {
   LuEyeOff as EyeOff,
   LuUserPlus as UserPlus,
   LuCheck as Check,
-  LuCircleAlert as AlertCircle
+  LuCircleAlert as AlertCircle,
+  LuAtSign as AtSign
 } from 'react-icons/lu';
 import { toast } from 'sonner';
 import useAuthStore from '../stores/authStore';
@@ -32,6 +33,7 @@ export default function CreateUserModal({ isOpen, onClose }) {
   const [errorMsg, setErrorMsg] = useState('');
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     role: 'QA Tester'
@@ -41,6 +43,7 @@ export default function CreateUserModal({ isOpen, onClose }) {
     if (isOpen) {
       setFormData({
         name: '',
+        username: '',
         email: '',
         password: '',
         role: 'QA Tester'
@@ -156,6 +159,18 @@ export default function CreateUserModal({ isOpen, onClose }) {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="e.g. alex@pecc.com"
+                size="md"
+              />
+            </div>
+
+            {/* Username */}
+            <div>
+              <CustomInput
+                label="Username (Optional)"
+                icon={AtSign}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                placeholder={formData.email ? `e.g. ${formData.email.split('@')[0].toLowerCase()}` : "e.g. ratha"}
                 size="md"
               />
             </div>

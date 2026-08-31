@@ -82,7 +82,7 @@ export const seedDemoUsers = async () => {
 // Register User
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, username, email, password, role } = req.body;
 
     if (!name || !email || !password) {
       return sendError(res, 'Name, email, and password are required.', 400, 'ERR_VALIDATION');
@@ -94,9 +94,30 @@ export const register = async (req, res) => {
       return sendError(res, 'An account with this email address already exists.', 409, 'ERR_CONFLICT');
     }
 
+    // Auto-generate or validate username
+    let finalUsername = username ? username.trim().toLowerCase() : '';
+    if (!finalUsername) {
+      const emailPrefix = normalizedEmail.split('@')[0] || '';
+      const sanitized = (emailPrefix || name).toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const baseUsername = sanitized || 'user';
+
+      finalUsername = baseUsername;
+      let counter = 1;
+      while (await User.findOne({ username: finalUsername }).lean()) {
+        finalUsername = `${baseUsername}${counter}`;
+        counter++;
+      }
+    } else {
+      const existingUsername = await User.findOne({ username: finalUsername }).lean();
+      if (existingUsername) {
+        return sendError(res, 'Username is already taken.', 409, 'ERR_CONFLICT');
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await User.create({
       name: name.trim(),
+      username: finalUsername,
       email: normalizedEmail,
       password: hashedPassword,
       role: role || 'QA Tester',
