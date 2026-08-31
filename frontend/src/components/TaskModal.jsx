@@ -202,17 +202,17 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-2xl shadow-2xl shadow-slate-950/20 max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-2xl shadow-2xl shadow-slate-950/20 max-w-xl w-full max-w-[calc(100vw-2rem)] max-h-[90vh] overflow-hidden flex flex-col border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
 
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
+        <div className="px-4 sm:px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50/50">
           <div>
             <h2 className="text-base font-bold text-slate-900 tracking-tight">
               {task ? 'Edit Task Record' : 'Create New QA Task'}
             </h2>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
               <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${currentStatusObj.color}`}>
                 <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
                 {currentStatusObj.label}
@@ -229,14 +229,14 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-slate-200/70 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-slate-200/70 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Modal Body Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1 text-xs">
 
           {/* Title */}
           <div>
@@ -381,7 +381,7 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
           </div>
 
           {/* Footer Action Buttons */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200 mt-2">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-slate-200 mt-2">
             <div>
               {task && (
                 <ConfirmPopover

@@ -48,6 +48,7 @@ export const taskController = {
         return sendError(res, `Task title "${trimmedTitle}" already exists. Duplicate titles are not allowed.`, 409, 'ERR_CONFLICT');
       }
 
+      const isTerminal = ['success', 'done', 'done_production'].includes(status);
       const newTask = new Task({
         title: trimmedTitle,
         status: status || 'backlog',
@@ -56,11 +57,14 @@ export const taskController = {
         timeline: timeline || '',
         remark: remark || '',
         date: date || '2026-08-01',
+        due_date: req.body.due_date || date || null,
+        delay_reason: req.body.delay_reason || '',
         flowType: flowType || 'none',
         flowValue: flowValue || '',
         kpiCategory: kpiCategory || 'none',
         user: user || req.user?.name || 'Unassigned',
-        owner: owner || 'Unassigned'
+        owner: owner || 'Unassigned',
+        completed_at: isTerminal ? new Date() : null
       });
 
       await newTask.save();
@@ -124,6 +128,17 @@ export const taskController = {
           return sendError(res, `Task title "${trimmedTitle}" already exists. Duplicate titles are not allowed.`, 409, 'ERR_CONFLICT');
         }
         updateData.title = trimmedTitle;
+      }
+
+      // Automatically maintain completed_at timestamp on terminal status transition
+      if (updateData.status) {
+        const isTerminalNow = ['success', 'done', 'done_production'].includes(updateData.status);
+        const isTerminalBefore = ['success', 'done', 'done_production'].includes(currentTask.status);
+        if (isTerminalNow && (!isTerminalBefore || !currentTask.completed_at)) {
+          updateData.completed_at = new Date();
+        } else if (!isTerminalNow && isTerminalBefore && !currentTask.kpi_claimed_month) {
+          updateData.completed_at = null;
+        }
       }
 
       const task = await Task.findByIdAndUpdate(

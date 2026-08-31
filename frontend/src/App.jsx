@@ -12,6 +12,7 @@ import KanbanBoard from './components/KanbanBoard';
 import DataTable from './components/DataTable';
 import KPIDashboard from './components/KPIDashboard';
 import AuditLogViewer from './components/admin/AuditLogViewer';
+import ReportsDashboard from './components/reports/ReportsDashboard';
 import TaskModal from './components/TaskModal';
 import OwnerManagementModal from './components/OwnerManagementModal';
 import LoginModal from './components/LoginModal';
@@ -72,7 +73,7 @@ function ControlCenterApp() {
     }
     const urlParams = new URLSearchParams(window.location.search);
     const urlTab = urlParams.get('tab');
-    const validTabs = ['board', 'kanban', 'table', 'dashboard', 'activity', 'admin'];
+    const validTabs = ['board', 'kanban', 'table', 'dashboard', 'reports', 'activity', 'admin'];
     if (urlTab && validTabs.includes(urlTab)) {
       const targetView = urlTab === 'kanban' ? 'board' : urlTab;
       if (targetView !== view) {
@@ -164,19 +165,31 @@ function ControlCenterApp() {
 
       return true;
     });
-  }, [tasks, filters, selectedMonth]);
+  }, [tasks, filters, selectedMonth, currentUser]);
 
   // CSV Data Export
   const handleExportCSV = () => {
-    if (!tasks || tasks.length === 0) {
+    if (tasks.length === 0) {
       toast.error('No tasks available to export');
       return;
     }
 
-    const headers = ['Date', 'Title', 'Owner', 'Status', 'Push To', 'Flow Type', 'Flow Value', 'Reason', 'Timeline', 'Remark'];
+    const headers = [
+      'Task Title',
+      'Date Created',
+      'Owner',
+      'Status',
+      'Push-To Environment',
+      'Flow Type',
+      'Flow Value',
+      'Reason',
+      'Timeline',
+      'Remark'
+    ];
+
     const rows = tasks.map(t => [
-      `"${(t.date || '').replace(/"/g, '""')}"`,
       `"${(t.title || '').replace(/"/g, '""')}"`,
+      `"${(t.date || '').replace(/"/g, '""')}"`,
       `"${(t.owner || 'Unassigned').replace(/"/g, '""')}"`,
       `"${(t.status || '').replace(/"/g, '""')}"`,
       `"${(t.pushTo || '').replace(/"/g, '""')}"`,
@@ -231,6 +244,8 @@ function ControlCenterApp() {
     );
   }
 
+  const isTaskView = view === 'board' || view === 'kanban' || view === 'table' || view === 'dashboard';
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
 
@@ -246,12 +261,12 @@ function ControlCenterApp() {
       <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full space-y-5">
 
         {/* Top Metric Cards (only for task views) */}
-        {view !== 'activity' && !hiddenWidgets.includes('metrics') && (
+        {isTaskView && !hiddenWidgets.includes('metrics') && (
           showSkeleton ? <MetricCardsSkeleton /> : <MetricCards tasks={filteredTasks} />
         )}
 
         {/* Advanced Filter Bar (only for task views) */}
-        {view !== 'activity' && (
+        {isTaskView && (
           showSkeleton ? (
             <FilterBarSkeleton />
           ) : (
@@ -272,7 +287,7 @@ function ControlCenterApp() {
 
 
         {/* Error State */}
-        {error && view !== 'activity' && (
+        {error && isTaskView && (
           <div className="py-12 bg-rose-50 border border-rose-200 rounded-xl text-center text-rose-700 space-y-2 p-6">
             <p className="font-bold text-sm">Failed to connect to backend server</p>
             <p className="text-xs text-rose-600">{error.message}</p>
@@ -309,6 +324,10 @@ function ControlCenterApp() {
 
             {view === 'dashboard' && (
               <KPIDashboard tasks={filteredTasks} owners={owners} />
+            )}
+
+            {view === 'reports' && (
+              <ReportsDashboard owners={owners} />
             )}
 
             {view === 'activity' && (

@@ -152,7 +152,7 @@ export default function KPIDashboard({ tasks = [], owners = [] }) {
         theme: getWidgetStyle('metrics').theme,
         rounded: getWidgetStyle('metrics').rounded,
         content: (
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 ${isCompact ? 'gap-2.5' : 'gap-4'}`}>
+          <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 ${isCompact ? 'gap-2.5' : 'gap-4'}`}>
             {kpiTiles.map((tile) => (
               <div key={tile.title} className={`bg-slate-50/70 rounded-xl border border-slate-200/70 ${isCompact ? 'p-2.5' : 'p-3.5'}`}>
                 <div className="flex items-center justify-between mb-1.5">

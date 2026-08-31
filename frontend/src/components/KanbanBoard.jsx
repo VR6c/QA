@@ -74,7 +74,7 @@ export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDele
       collisionDetection={closestCorners}
       onDragEnd={handleDragEnd}
     >
-      <div className={`flex overflow-x-auto pb-4 pt-1 min-h-[500px] ${isCompact ? 'gap-2' : 'gap-3.5'}`}>
+      <div className={`flex overflow-x-auto snap-x snap-mandatory pb-4 pt-1 min-h-[500px] scroll-smooth ${isCompact ? 'gap-2' : 'gap-3 sm:gap-3.5'}`}>
         {columnIds.map((colId) => (
           <KanbanColumn
             key={colId}

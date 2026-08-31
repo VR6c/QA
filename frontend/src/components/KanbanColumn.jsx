@@ -68,7 +68,7 @@ export default function KanbanColumn({ id, tasks = [], onEdit, onDelete }) {
   const taskIds = tasks.map(t => String(t.id || t._id));
 
   return (
-    <div className={`flex-1 min-w-[260px] max-w-[320px] flex flex-col rounded-xl border overflow-hidden shadow-2xs ${config.columnBg}`}>
+    <div className={`snap-center min-w-[280px] sm:min-w-[300px] max-w-[320px] shrink-0 flex flex-col rounded-xl border overflow-hidden shadow-2xs ${config.columnBg}`}>
       
       {/* Swimlane Header */}
       <div className={`px-3.5 py-3 border-b flex items-center justify-between ${config.headerBg}`}>

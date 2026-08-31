@@ -13,7 +13,8 @@ import {
   LuShieldAlert as ShieldAlert,
   LuActivity as ActivityIcon,
   LuCamera as Camera,
-  LuKey as Key
+  LuKey as Key,
+  LuFileText as FileText
 } from 'react-icons/lu';
 import { toast } from 'sonner';
 import useUIStore from '../stores/uiStore';
@@ -35,6 +36,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
     { id: 'board', label: 'Board', icon: Kanban },
     { id: 'table', label: 'Data Table', icon: Table },
     { id: 'dashboard', label: 'KPIs', icon: BarChart3 },
+    { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'activity', label: 'Activity Log', icon: ActivityIcon },
     { id: 'admin', label: 'Super Admin', icon: ShieldAlert }
   ];
@@ -81,20 +83,21 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
           </div>
 
           {/* View Switcher & Action Buttons */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
 
             {/* View Switcher (Kanban / Table / Dashboard / Activity Log / Super Admin) */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200/80">
+            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar scroll-smooth max-w-[52vw] sm:max-w-none shrink">
               {views.filter(v => v.id !== 'admin' || isSuperAdmin).map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setView(id)}
-                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${(view === id || (id === 'board' && view === 'kanban'))
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${(view === id || (id === 'board' && view === 'kanban'))
                     ? 'bg-white text-blue-600 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                     }`}
+                  title={label}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden md:inline">{label}</span>
                 </button>
               ))}

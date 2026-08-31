@@ -48,13 +48,13 @@ export default function CustomModal({
 
       {/* Modal Card Container */}
       <div
-        className={`relative w-full bg-white rounded-2xl border border-slate-200/90 shadow-2xl shadow-slate-950/20 overflow-hidden z-10 transition-all transform animate-in fade-in zoom-in-95 duration-200 my-auto ${
+        className={`relative w-full max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200/90 shadow-2xl shadow-slate-950/20 overflow-hidden z-10 transition-all transform animate-in fade-in zoom-in-95 duration-200 my-auto ${
           sizeClasses[size] || sizeClasses.md
         } ${className}`}
       >
         {/* Header */}
         {(title || subtitle) && (
-          <div className="flex items-start justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-start justify-between px-4 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/50">
             <div>
               {title && <h3 className="text-base font-bold text-slate-900">{title}</h3>}
               {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
@@ -70,7 +70,7 @@ export default function CustomModal({
         )}
 
         {/* Modal Body */}
-        <div className="p-6 max-h-[75vh] overflow-y-auto text-slate-700 text-sm">
+        <div className="p-4 sm:p-6 max-h-[80vh] sm:max-h-[85vh] overflow-y-auto text-slate-700 text-sm">
           {children}
         </div>
 

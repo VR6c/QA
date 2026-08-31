@@ -216,5 +216,84 @@ export const api = {
       throw new Error(extractError(err, 'Failed to delete owner'));
     }
     return res.json();
+  },
+
+  // Reports API
+  async getKpiTargets() {
+    const res = await fetch('/api/reports/kpi-targets', { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch KPI targets'));
+    }
+    return res.json();
+  },
+
+  async updateKpiTargets(data) {
+    const res = await fetch('/api/reports/kpi-targets', {
+      method: 'PUT',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to update KPI targets'));
+    }
+    return res.json();
+  },
+
+  async getWeeklyPreview(startDate, endDate) {
+    const params = new URLSearchParams();
+    if (startDate) params.set('startDate', startDate);
+    if (endDate) params.set('endDate', endDate);
+    const res = await fetch(`/api/reports/weekly/preview?${params.toString()}`, { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch weekly report preview'));
+    }
+    return res.json();
+  },
+
+  async getMonthlyPreview(targetMonth, owner = 'all') {
+    const params = new URLSearchParams({ targetMonth, owner });
+    const res = await fetch(`/api/reports/monthly/preview?${params.toString()}`, { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch monthly report preview'));
+    }
+    return res.json();
+  },
+
+  async finalizeReport(reportData) {
+    const res = await fetch('/api/reports/finalize', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(reportData)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to finalize report'));
+    }
+    return res.json();
+  },
+
+  async unlockTask(taskId) {
+    const res = await fetch(`/api/reports/unlock-task/${taskId}`, {
+      method: 'POST',
+      headers: this.getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to unlock task'));
+    }
+    return res.json();
+  },
+
+  async getReports() {
+    const res = await fetch('/api/reports', { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch historical reports'));
+    }
+    return res.json();
   }
 };

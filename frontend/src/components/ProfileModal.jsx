@@ -222,7 +222,7 @@ export default function ProfileModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-lg max-w-[calc(100vw-2rem)] overflow-hidden flex flex-col max-h-[90vh]">
 
         {/* Modal Header */}
         <div className="relative px-6 pt-6 pb-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
@@ -381,7 +381,7 @@ export default function ProfileModal() {
 
               {/* Tab 1: Preset Avatars Gallery */}
               {avatarTab === 'preset' && (
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-48 overflow-y-auto p-1 bg-slate-50/50 rounded-2xl border border-slate-200/70">
+                <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 gap-2.5 max-h-48 overflow-y-auto p-1 bg-slate-50/50 rounded-2xl border border-slate-200/70">
                   {PRESET_AVATARS.map((item, index) => {
                     const isSelected = avatar === item.url;
                     return (

@@ -7,6 +7,7 @@ import ownerRoutes from './routes/owners.js';
 import authRoutes from './routes/auth.js';
 import adminRoutes from './routes/admin.js';
 import activityRoutes from './routes/activities.js';
+import reportRoutes from './routes/reportRoutes.js';
 import { seedDemoUsers } from './controllers/authController.js';
 import { seedSuperAdminData } from './seed/superAdminSeed.js';
 import { responseMiddleware } from './utils/responseFormatter.js';
@@ -43,6 +44,7 @@ app.use('/api/owners', ownerRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Centralized Global Error Handler Middleware
 app.use(globalErrorHandler);

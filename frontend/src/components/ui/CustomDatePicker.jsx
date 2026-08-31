@@ -200,17 +200,27 @@ export default function CustomDatePicker({
     const popoverHeight = mode === 'range' ? 420 : 360;
     const placement = spaceBelow < popoverHeight && rect.top > popoverHeight ? 'top' : 'bottom';
 
-    const popoverWidth = mode === 'range' && enablePresets ? 480 : 320;
+    const isMobile = window.innerWidth < 640;
+    const popoverWidth = isMobile ? Math.min(340, window.innerWidth - 24) : (mode === 'range' && enablePresets ? 480 : 320);
+
     let isRight = align === 'right';
     if (align === 'auto') {
       isRight = rect.left + popoverWidth > window.innerWidth - 16;
     }
 
+    let leftPos = isRight ? 'auto' : Math.max(8, Math.min(rect.left, window.innerWidth - popoverWidth - 8));
+    let rightPos = isRight ? Math.max(8, Math.min(window.innerWidth - rect.right, window.innerWidth - popoverWidth - 8)) : 'auto';
+
+    if (isMobile) {
+      leftPos = Math.max(8, (window.innerWidth - popoverWidth) / 2);
+      rightPos = 'auto';
+    }
+
     setCoords({
       top: placement === 'bottom' ? rect.bottom + 6 : 'auto',
       bottom: placement === 'top' ? window.innerHeight - rect.top + 6 : 'auto',
-      left: isRight ? 'auto' : Math.max(8, rect.left),
-      right: isRight ? Math.max(8, window.innerWidth - rect.right) : 'auto',
+      left: leftPos,
+      right: rightPos,
     });
     setEffectiveAlign(isRight ? 'right' : 'left');
   };
@@ -389,7 +399,7 @@ export default function CustomDatePicker({
       }}
       className={`z-[9999] bg-white backdrop-blur-md rounded-2xl border border-slate-200/90 shadow-2xl transition-all animate-in fade-in slide-in-from-top-2 max-w-none overflow-hidden ${popoverClassName}`}
     >
-      <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 min-w-max">
+      <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-slate-100 max-w-full sm:min-w-max">
         {/* Presets Sidebar (Range Mode only) */}
         {mode === 'range' && enablePresets && (
           <div className="p-3 bg-slate-50/70 w-full sm:w-44 shrink-0 flex flex-col border-b sm:border-b-0 sm:border-r border-slate-100 rounded-t-2xl sm:rounded-l-2xl sm:rounded-tr-none">

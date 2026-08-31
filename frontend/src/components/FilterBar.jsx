@@ -332,11 +332,11 @@ export default function FilterBar({
         </div>
       )}
 
-      {/* Desktop Filter Options Grid */}
-      <div className={`sm:flex flex-wrap items-center gap-2.5 pt-1 ${isMobileFilterOpen ? 'block space-y-2 sm:space-y-0' : 'hidden sm:flex'}`}>
+      {/* Filter Options Grid (Mobile / Tablet / Laptop / Desktop) */}
+      <div className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 pt-1 w-full ${isMobileFilterOpen ? 'block' : 'hidden sm:grid'}`}>
 
         {/* Status Dropdown */}
-        <div className="min-w-[155px] flex-1 sm:flex-none">
+        <div className="w-full">
           <CustomSelect
             options={statusOptions}
             value={filters.status}
@@ -349,7 +349,7 @@ export default function FilterBar({
         </div>
 
         {/* Owner Dropdown */}
-        <div className="min-w-[150px] flex-1 sm:flex-none">
+        <div className="w-full">
           <CustomSelect
             options={ownerFilterOptions}
             value={filters.owner || 'all'}
@@ -362,7 +362,7 @@ export default function FilterBar({
         </div>
 
         {/* Environment Dropdown */}
-        <div className="min-w-[150px] flex-1 sm:flex-none">
+        <div className="w-full">
           <CustomSelect
             options={envOptions}
             value={filters.environment}
@@ -375,7 +375,7 @@ export default function FilterBar({
         </div>
 
         {/* KPI Dropdown */}
-        <div className="min-w-[165px] flex-1 sm:flex-none">
+        <div className="w-full">
           <CustomSelect
             options={kpiFilterOptions}
             value={filters.kpiCategory || 'all'}
@@ -388,7 +388,7 @@ export default function FilterBar({
         </div>
 
         {/* Date Range Picker */}
-        <div className="min-w-[190px] flex-1 sm:flex-none">
+        <div className="w-full">
           <CustomDatePicker
             mode="range"
             align="right"
@@ -414,29 +414,29 @@ export default function FilterBar({
       </div>
 
       {/* One-Tap Quick Date Range Chips */}
-      <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-slate-100/80 text-xs">
-        <span className="text-[11px] font-semibold text-slate-400 mr-1">Quick Date:</span>
+      <div className="flex items-center gap-1.5 pt-1.5 border-t border-slate-100/80 text-xs overflow-x-auto no-scrollbar scroll-smooth whitespace-nowrap">
+        <span className="text-[11px] font-semibold text-slate-400 mr-1 shrink-0">Quick Date:</span>
         <button
           onClick={() => handleQuickDateChip('today')}
-          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer shrink-0"
         >
           Today
         </button>
         <button
           onClick={() => handleQuickDateChip('week')}
-          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer shrink-0"
         >
           This Week
         </button>
         <button
           onClick={() => handleQuickDateChip('month')}
-          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer shrink-0"
         >
           This Month
         </button>
         <button
           onClick={() => handleQuickDateChip('30days')}
-          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+          className="px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:text-blue-600 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer shrink-0"
         >
           Last 30 Days
         </button>

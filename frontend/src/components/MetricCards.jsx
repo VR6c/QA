@@ -65,7 +65,7 @@ export default function MetricCards({ tasks = [] }) {
   ];
 
   return (
-    <div className={`grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 ${isCompact ? 'gap-2.5' : 'gap-3.5'}`}>
+    <div className={`grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 ${isCompact ? 'gap-2.5' : 'gap-3.5'}`}>
       {metrics.map((m) => (
         <div 
           key={m.label}
