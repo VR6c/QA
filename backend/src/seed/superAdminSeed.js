@@ -165,7 +165,7 @@ export const seedSuperAdminData = async () => {
       { key: 'system_notifications', name: 'In-App System Banners', category: 'Notification', value: true, value_type: 'boolean', status: 'Enabled', description: 'Broadcast administrative alerts in UI' },
 
       // Feature Settings
-      { key: 'qa_kanban_board', name: 'QA Kanban Board Feature', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable 6-swimlane QA Kanban board module' },
+      { key: 'qa_kanban_board', name: 'QA Board Feature', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable 6-swimlane QA board module' },
       { key: 'attendance_module', name: 'Attendance Management', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable team clock-in & attendance tracking' },
       { key: 'leave_module', name: 'Leave Request Management', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable employee leave approval workflows' },
       { key: 'reports_module', name: 'Executive Analytics & Reports', category: 'Feature', value: true, value_type: 'boolean', status: 'Enabled', description: 'Enable executive KPI reporting views' }

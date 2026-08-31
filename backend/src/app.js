@@ -9,7 +9,6 @@ import adminRoutes from './routes/admin.js';
 import activityRoutes from './routes/activities.js';
 import { seedDemoUsers } from './controllers/authController.js';
 import { seedSuperAdminData } from './seed/superAdminSeed.js';
-
 import { responseMiddleware } from './utils/responseFormatter.js';
 import { globalErrorHandler } from './middleware/errorHandler.js';
 import { apiRateLimiter, authRateLimiter } from './middleware/rateLimiter.js';

@@ -98,7 +98,7 @@ export const sampleTasks = [
     flowValue: ""
   },
   {
-    title: "Optimize React component re-renders on Kanban drag & drop",
+    title: "Optimize React component re-renders on Board drag & drop",
     status: "progress",
     pushTo: "Development",
     reason: "FPS drops when moving cards on large boards",

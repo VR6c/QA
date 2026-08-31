@@ -256,7 +256,7 @@ export default function KPIDashboard({ tasks = [], owners = [] }) {
       capacity: {
         id: 'capacity',
         title: 'Column Capacity & Workload',
-        subtitle: 'Kanban Column Task Allocation',
+        subtitle: 'Board Column Task Allocation',
         badgeText: 'Capacity',
         variant: getWidgetStyle('capacity').variant,
         theme: getWidgetStyle('capacity').theme,
