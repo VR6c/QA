@@ -328,7 +328,7 @@ function ControlCenterApp() {
             )}
 
             {view === 'calendar' && (
-              <MyCalendarView tasks={tasks} owners={owners} />
+              <MyCalendarView tasks={filteredTasks} owners={owners} />
             )}
 
             {view === 'reports' && (

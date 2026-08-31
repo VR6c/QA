@@ -27,7 +27,6 @@ import { CalendarDayView } from './calendar-day-view';
 import useAuthStore from '../../stores/authStore';
 import useUIStore from '../../stores/uiStore';
 import { CustomSelect } from '../ui';
-import { isUserOwnerMatch } from '../../lib/kpiConstants';
 
 export default function MyCalendarView({ tasks = [], owners = [] }) {
   const localTimeZone = getLocalTimeZone();
@@ -60,18 +59,14 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
   // Filter tasks based on calendar toolbar controls
   const filteredTasks = useMemo(() => {
     return tasks.filter((t) => {
-      // 1. My Tasks Only Filter: Matches tasks created by current user OR assigned to current user
+      // 1. My Tasks Only Filter
       if (myTasksOnly && currentUser?.name) {
-        const isCreator = isUserOwnerMatch(t.user, currentUser.name);
-        const isOwner = isUserOwnerMatch(t.owner, currentUser.name);
-        if (!isCreator && !isOwner) return false;
+        if (t.user !== currentUser.name && t.owner !== currentUser.name) return false;
       }
 
       // 2. Owner Filter
       if (filterOwner !== 'all') {
-        const isOwnerMatch = isUserOwnerMatch(t.owner, filterOwner);
-        const isCreatorMatch = isUserOwnerMatch(t.user, filterOwner);
-        if (!isOwnerMatch && !isCreatorMatch) return false;
+        if (t.owner !== filterOwner && t.user !== filterOwner) return false;
       }
 
       // 3. Status Filter
