@@ -19,7 +19,11 @@ export const taskController = {
       }
 
       const tasks = await Task.find(query).sort({ createdAt: -1 }).lean();
-      return sendSuccess(res, tasks, { total: tasks.length }, 'Tasks retrieved successfully');
+      const formattedTasks = tasks.map(t => ({
+        ...t,
+        id: t._id.toString()
+      }));
+      return sendSuccess(res, formattedTasks, { total: formattedTasks.length }, 'Tasks retrieved successfully');
     } catch (error) {
       console.error('Error fetching tasks:', error);
       return sendError(res, error.message || 'Failed to fetch tasks', 500, 'ERR_INTERNAL');

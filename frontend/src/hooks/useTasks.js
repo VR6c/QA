@@ -16,7 +16,10 @@ export function useTasks() {
 
 
       const tasksList = response.data || response.tasks || (Array.isArray(response) ? response : []);
-      return tasksList;
+      return tasksList.map(t => ({
+        ...t,
+        id: String(t.id || t._id)
+      }));
     },
     staleTime: 30000
   });
@@ -73,12 +76,12 @@ export function useTasks() {
     };
 
     const previousTasks = queryClient.getQueryData(['tasks']);
-    const targetTask = previousTasks?.find(t => t.id === id);
+    const targetTask = previousTasks?.find(t => String(t.id || t._id) === String(id));
 
     // Optimistically update query cache
     queryClient.setQueryData(['tasks'], (old) => {
       if (!old) return [];
-      return old.map(t => t.id === id ? { ...t, status: newStatus } : t);
+      return old.map(t => String(t.id || t._id) === String(id) ? { ...t, status: newStatus } : t);
     });
 
     try {

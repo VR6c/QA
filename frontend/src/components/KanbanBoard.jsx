@@ -4,13 +4,15 @@ import {
   closestCorners,
   KeyboardSensor,
   PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors
 } from '@dnd-kit/core';
 import KanbanColumn from './KanbanColumn';
 import useUIStore from '../stores/uiStore';
 
-const columnIds = ['backlog', 'progress', 'feedback', 'success', 'done', 'done_production'];
+const columnIds = ['backlog', 'progress', 'feedback', 'testing', 'success', 'done', 'done_production'];
 
 export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDelete }) {
   const { dashboardDensity } = useUIStore();
@@ -19,7 +21,18 @@ export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDele
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 5
+        distance: 3
+      }
+    }),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 3
+      }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 150,
+        tolerance: 5
       }
     }),
     useSensor(KeyboardSensor)
@@ -30,7 +43,7 @@ export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDele
     if (!over) return;
 
     const activeId = active.id;
-    const activeTask = tasks.find(t => t.id === activeId);
+    const activeTask = tasks.find(t => String(t.id) === String(activeId));
     if (!activeTask) return;
 
     // Determine target column status
@@ -38,7 +51,7 @@ export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDele
 
     // If dropped over another task, find that task's status
     if (!columnIds.includes(targetStatus)) {
-      const overTask = tasks.find(t => t.id === over.id);
+      const overTask = tasks.find(t => String(t.id) === String(over.id));
       if (overTask) {
         targetStatus = overTask.status;
       }
