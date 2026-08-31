@@ -95,6 +95,7 @@ function ControlCenterApp() {
   // Filter tasks based on active FilterBar & selectedMonth
   const filteredTasks = useMemo(() => {
     const isSuperAdmin = currentUser?.role === 'Super Admin' || currentUser?.role === 'QA Lead' || currentUser?.role === 'Admin';
+    const isBoardView = view === 'board' || view === 'kanban';
 
     return tasks.filter(task => {
 
@@ -140,17 +141,23 @@ function ControlCenterApp() {
         if (taskCategory !== filters.kpiCategory) return false;
       }
 
-      // 6. Date Range Filter
-      const isCustomDateRange = (filters.dateStart && filters.dateStart !== '2025-07-01') || (filters.dateEnd && filters.dateEnd !== '2026-12-31');
-      if (filters.dateStart && task.date && task.date < filters.dateStart) return false;
-      if (filters.dateEnd && task.date && task.date > filters.dateEnd) return false;
+      // 6. Date Range, Quick Date, & Selected Month Filters (Excluding IMP Flow & Backlog / Pending tasks ONLY in Board view)
+      const isImpFlow = Boolean(task.flowType && task.flowType !== 'none');
+      const isBacklogPending = task.status === 'backlog';
+      const isExcludedFromDateFilter = isBoardView && (isImpFlow || isBacklogPending);
 
-      // 7. Quick Date Pill Filter
-      if (filters.quickDate && task.date !== filters.quickDate) return false;
+      if (!isExcludedFromDateFilter) {
+        const isCustomDateRange = (filters.dateStart && filters.dateStart !== '2025-07-01') || (filters.dateEnd && filters.dateEnd !== '2026-12-31');
+        if (filters.dateStart && task.date && task.date < filters.dateStart) return false;
+        if (filters.dateEnd && task.date && task.date > filters.dateEnd) return false;
 
-      // 8. Selected Month Filter
-      if (!isCustomDateRange && selectedMonth && selectedMonth !== 'all' && task.date) {
-        if (!task.date.startsWith(selectedMonth)) return false;
+        // 7. Quick Date Pill Filter
+        if (filters.quickDate && task.date !== filters.quickDate) return false;
+
+        // 8. Selected Month Filter
+        if (!isCustomDateRange && selectedMonth && selectedMonth !== 'all' && task.date) {
+          if (!task.date.startsWith(selectedMonth)) return false;
+        }
       }
 
       // 9. IMP Flow Type Filter
@@ -167,7 +174,7 @@ function ControlCenterApp() {
 
       return true;
     });
-  }, [tasks, filters, selectedMonth, currentUser]);
+  }, [tasks, filters, selectedMonth, currentUser, view]);
 
   // CSV Data Export
   const handleExportCSV = () => {
