@@ -31,7 +31,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
   const isSuperAdmin = user?.role === 'Super Admin';
 
   const views = [
-    { id: 'kanban', label: 'Board', icon: Kanban },
+    { id: 'board', label: 'Board', icon: Kanban },
     { id: 'table', label: 'Data Table', icon: Table },
     { id: 'dashboard', label: 'KPIs', icon: BarChart3 },
     { id: 'activity', label: 'Activity Log', icon: ActivityIcon },
@@ -88,7 +88,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
                 <button
                   key={id}
                   onClick={() => setView(id)}
-                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${view === id
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-md transition-all cursor-pointer ${(view === id || (id === 'board' && view === 'kanban'))
                     ? 'bg-white text-blue-600 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
                     }`}

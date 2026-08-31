@@ -67,11 +67,17 @@ function ControlCenterApp() {
 
   // 1. Initial URL Hydration for IMP Tab State
   useEffect(() => {
+    if (view === 'kanban') {
+      setView('board');
+    }
     const urlParams = new URLSearchParams(window.location.search);
     const urlTab = urlParams.get('tab');
-    const validTabs = ['kanban', 'table', 'dashboard', 'activity', 'admin'];
-    if (urlTab && validTabs.includes(urlTab) && urlTab !== view) {
-      setView(urlTab);
+    const validTabs = ['board', 'kanban', 'table', 'dashboard', 'activity', 'admin'];
+    if (urlTab && validTabs.includes(urlTab)) {
+      const targetView = urlTab === 'kanban' ? 'board' : urlTab;
+      if (targetView !== view) {
+        setView(targetView);
+      }
     }
   }, []);
 
@@ -220,7 +226,7 @@ function ControlCenterApp() {
   if (view === 'admin' && currentUser?.role === 'Super Admin') {
     return (
       <>
-        <SuperAdminShell onBackToApp={() => useUIStore.getState().setView('kanban')} currentUser={currentUser} />
+        <SuperAdminShell onBackToApp={() => useUIStore.getState().setView('board')} currentUser={currentUser} />
         <LoginModal />
         <Toaster position="bottom-right" richColors />
       </>
@@ -284,7 +290,7 @@ function ControlCenterApp() {
         {/* Active View Display */}
         {!showSkeleton && (
           <div key={view} className="pt-1 animate-fade-in-up">
-            {view === 'kanban' && (
+            {(view === 'board' || view === 'kanban') && (
               <KanbanBoard
                 tasks={filteredTasks}
                 onStatusChange={updateStatus}

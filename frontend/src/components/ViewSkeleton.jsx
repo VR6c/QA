@@ -133,14 +133,14 @@ export function FilterBarSkeleton() {
   );
 }
 
-export default function ViewSkeleton({ view = 'kanban' }) {
+export default function ViewSkeleton({ view = 'board' }) {
   return (
     <div className="space-y-4 py-2 animate-in fade-in duration-300">
       <div className="flex items-center space-x-2 text-xs text-slate-500 font-medium mb-2">
         <div className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
         <span>Loading content...</span>
       </div>
-      {view === 'kanban' && <KanbanViewSkeleton />}
+      {(view === 'board' || view === 'kanban') && <KanbanViewSkeleton />}
       {view === 'table' && <TableViewSkeleton />}
       {view === 'dashboard' && <DashboardViewSkeleton />}
     </div>
