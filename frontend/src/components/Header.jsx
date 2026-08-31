@@ -89,7 +89,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
 
             {/* View Switcher (Kanban / Table / Dashboard / Activity Log / Super Admin) */}
             <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar scroll-smooth max-w-[52vw] sm:max-w-none shrink">
-              {views.filter(v => v.id !== 'admin' || isSuperAdmin).map(({ id, label, icon: Icon }) => (
+              {views.filter(v => (!['admin', 'reports'].includes(v.id)) || isSuperAdmin).map(({ id, label, icon: Icon }) => (
                 <button
                   key={id}
                   onClick={() => setView(id)}

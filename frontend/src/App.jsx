@@ -98,10 +98,11 @@ function ControlCenterApp() {
 
     return tasks.filter(task => {
 
-      // 0. Data Isolation Rule for Regular Users: Task created by User A, ONLY User A can see
+      // 0. Data Isolation Rule for Regular Users: Task created by or assigned to User A
       if (!isSuperAdmin && currentUser?.name) {
         const isCreator = isUserOwnerMatch(task.user, currentUser.name);
-        if (!isCreator) return false;
+        const isOwner = isUserOwnerMatch(task.owner, currentUser.name);
+        if (!isCreator && !isOwner) return false;
       }
 
       // 1. Search Query Filter (title, reason, remark)
