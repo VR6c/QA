@@ -11,6 +11,7 @@ import FilterBar from './components/FilterBar';
 import KanbanBoard from './components/KanbanBoard';
 import DataTable from './components/DataTable';
 import KPIDashboard from './components/KPIDashboard';
+import MyCalendarView from './components/calendar/MyCalendarView';
 import AuditLogViewer from './components/admin/AuditLogViewer';
 import ReportsDashboard from './components/reports/ReportsDashboard';
 import TaskModal from './components/TaskModal';
@@ -73,7 +74,7 @@ function ControlCenterApp() {
     }
     const urlParams = new URLSearchParams(window.location.search);
     const urlTab = urlParams.get('tab');
-    const validTabs = ['board', 'kanban', 'table', 'dashboard', 'reports', 'activity', 'admin'];
+    const validTabs = ['board', 'kanban', 'table', 'dashboard', 'calendar', 'reports', 'activity', 'admin'];
     if (urlTab && validTabs.includes(urlTab)) {
       const targetView = urlTab === 'kanban' ? 'board' : urlTab;
       if (targetView !== view) {
@@ -324,6 +325,10 @@ function ControlCenterApp() {
 
             {view === 'dashboard' && (
               <KPIDashboard tasks={filteredTasks} owners={owners} />
+            )}
+
+            {view === 'calendar' && (
+              <MyCalendarView tasks={tasks} owners={owners} />
             )}
 
             {view === 'reports' && (

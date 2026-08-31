@@ -48,7 +48,7 @@ export const defaultDashboardLayout = {
 const useUIStore = create(
   persist(
     (set, get) => ({
-      view: 'board', // 'board' | 'table' | 'dashboard' | 'admin'
+      view: 'board', // 'board' | 'table' | 'dashboard' | 'calendar' | 'admin'
       selectedMonth: getCurrentMonth(),
       filters: defaultFilters,
       savedViews: initialSavedViews,

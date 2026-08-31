@@ -14,7 +14,8 @@ import {
   LuActivity as ActivityIcon,
   LuCamera as Camera,
   LuKey as Key,
-  LuFileText as FileText
+  LuFileText as FileText,
+  LuCalendar as CalendarIcon
 } from 'react-icons/lu';
 import { toast } from 'sonner';
 import useUIStore from '../stores/uiStore';
@@ -36,6 +37,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
     { id: 'board', label: 'Board', icon: Kanban },
     { id: 'table', label: 'Data Table', icon: Table },
     { id: 'dashboard', label: 'KPIs', icon: BarChart3 },
+    { id: 'calendar', label: 'My Calendar', icon: CalendarIcon },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'activity', label: 'Activity Log', icon: ActivityIcon },
     { id: 'admin', label: 'Super Admin', icon: ShieldAlert }
