@@ -142,9 +142,28 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
     }));
   }, [owners]);
 
+  const [isMultipleRemark, setIsMultipleRemark] = useState(false);
+  const [remarksList, setRemarksList] = useState([]);
+  const [newRemarkText, setNewRemarkText] = useState('');
+
   useEffect(() => {
     setServerError('');
+    setNewRemarkText('');
     const today = getTodayString();
+    const currentRemark = task?.remark || '';
+    const lines = currentRemark
+      .split('\n')
+      .map(l => l.replace(/^[•\-\*]\s*/, '').trim())
+      .filter(Boolean);
+
+    if (lines.length > 1) {
+      setIsMultipleRemark(true);
+      setRemarksList(lines);
+    } else {
+      setIsMultipleRemark(false);
+      setRemarksList(lines.length === 1 ? lines : []);
+    }
+
     if (task) {
       setFormData({
         title: task.title || '',
@@ -181,6 +200,44 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
       });
     }
   }, [task, isOpen, currentUser?.name]);
+
+  const handleToggleRemarkMode = (multiple) => {
+    setIsMultipleRemark(multiple);
+    if (multiple) {
+      let list = remarksList;
+      if (list.length === 0 && formData.remark.trim()) {
+        list = formData.remark
+          .split('\n')
+          .map(l => l.replace(/^[•\-\*]\s*/, '').trim())
+          .filter(Boolean);
+        if (list.length === 0) list = [formData.remark.trim()];
+        setRemarksList(list);
+      }
+      const formatted = list.map(r => `• ${r}`).join('\n');
+      setFormData(prev => ({ ...prev, remark: formatted }));
+    } else {
+      const combined = remarksList.join(' • ') || formData.remark.replace(/^[•\-\*]\s*/g, '').split('\n').join(' • ');
+      setFormData(prev => ({ ...prev, remark: combined }));
+    }
+  };
+
+  const handleAddRemarkItem = (e) => {
+    if (e) e.preventDefault();
+    const trimmed = newRemarkText.trim();
+    if (!trimmed) return;
+    const updated = [...remarksList, trimmed];
+    setRemarksList(updated);
+    setNewRemarkText('');
+    const formatted = updated.map(r => `• ${r}`).join('\n');
+    setFormData(prev => ({ ...prev, remark: formatted }));
+  };
+
+  const handleRemoveRemarkItem = (index) => {
+    const updated = remarksList.filter((_, i) => i !== index);
+    setRemarksList(updated);
+    const formatted = updated.length > 0 ? updated.map(r => `• ${r}`).join('\n') : '';
+    setFormData(prev => ({ ...prev, remark: formatted }));
+  };
 
   if (!isOpen) return null;
 
@@ -407,15 +464,108 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
               />
             </div>
 
-            <div>
-              <CustomInput
-                label="Remark / Highlight"
-                maxLength={500}
-                value={formData.remark}
-                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                placeholder="e.g. High priority blocker"
-                size="sm"
-              />
+            <div className={isMultipleRemark ? "md:col-span-2" : ""}>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Remark / Highlight
+                </label>
+                {/* Toggle Switch Single / Multiple */}
+                <div className="flex items-center p-0.5 bg-slate-100 rounded-lg border border-slate-200 text-[10px]">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRemarkMode(false)}
+                    className={`px-2.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                      !isMultipleRemark
+                        ? 'bg-white text-slate-900 shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Single
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleRemarkMode(true)}
+                    className={`px-2.5 py-0.5 rounded-md font-bold transition-all cursor-pointer ${
+                      isMultipleRemark
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    Multiple
+                  </button>
+                </div>
+              </div>
+
+              {isMultipleRemark ? (
+                <div className="bg-slate-50/80 border border-slate-200/90 rounded-xl p-3 space-y-2.5">
+                  {/* Current items list */}
+                  {remarksList.length > 0 ? (
+                    <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                      {remarksList.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-xs text-xs group"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                            <span className="text-slate-800 font-medium truncate">{item}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveRemarkItem(idx)}
+                            className="text-slate-400 hover:text-rose-600 p-0.5 rounded transition-colors cursor-pointer shrink-0"
+                            title="Remove remark item"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 italic text-center py-1">
+                      No remarks added yet. Add items below.
+                    </p>
+                  )}
+
+                  {/* Input row to add new item */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={newRemarkText}
+                      onChange={(e) => setNewRemarkText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddRemarkItem();
+                        }
+                      }}
+                      placeholder="Type a remark item and press Enter..."
+                      className="flex-1 px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 placeholder:text-slate-400"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddRemarkItem}
+                      disabled={!newRemarkText.trim()}
+                      className="px-3 py-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Add
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <CustomInput
+                  placeholder="e.g. High priority blocker"
+                  maxLength={500}
+                  value={formData.remark}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setFormData({ ...formData, remark: val });
+                    setRemarksList(val.trim() ? [val.trim()] : []);
+                  }}
+                  size="sm"
+                />
+              )}
             </div>
           </div>
 

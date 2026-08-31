@@ -173,11 +173,19 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
             </p>
           )}
 
-          {/* Remark Line (Italic) */}
+          {/* Remark Line(s) */}
           {task.remark && (
-            <p className="text-[11px] text-slate-500 font-medium italic truncate pt-0.5">
-              {task.remark}
-            </p>
+            <div className="pt-0.5 space-y-0.5">
+              {task.remark.split('\n').filter(r => r.trim()).map((rmk, idx) => {
+                const cleanText = rmk.replace(/^[•\-\*]\s*/, '').trim();
+                return (
+                  <div key={idx} className="flex items-start gap-1 text-[11px] text-slate-500 font-medium italic">
+                    <span className="text-blue-500 text-[10px] select-none shrink-0">•</span>
+                    <span className="line-clamp-2">{cleanText}</span>
+                  </div>
+                );
+              })}
+            </div>
           )}
 
         </div>

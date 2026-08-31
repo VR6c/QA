@@ -296,7 +296,9 @@ export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTas
 
                 {/* 9. Remark */}
                 <td className={`${cellPaddingClass} text-slate-500 italic`}>
-                  <div className="truncate max-w-xs">{task.remark || '-'}</div>
+                  <div className="truncate max-w-xs" title={task.remark || ''}>
+                    {task.remark ? task.remark.split('\n').map(r => r.replace(/^[•\-\*]\s*/, '').trim()).filter(Boolean).join(' • ') : '-'}
+                  </div>
                 </td>
 
                 {/* 10. Actions */}
