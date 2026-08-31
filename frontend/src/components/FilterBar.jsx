@@ -16,7 +16,7 @@ import {
   LuTrash2 as Trash2,
   LuCheck as Check
 } from 'react-icons/lu';
-import { format, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
+import { format, addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from 'date-fns';
 import useUIStore from '../stores/uiStore';
 import useAuthStore from '../stores/authStore';
 import useKPIStore from '../stores/kpiStore';
@@ -145,8 +145,10 @@ export default function FilterBar({
       const d = format(today, 'yyyy-MM-dd');
       setFilters({ dateStart: d, dateEnd: d });
     } else if (preset === 'week') {
-      const start = format(startOfWeek(today, { weekStartsOn: 0 }), 'yyyy-MM-dd');
-      const end = format(endOfWeek(today, { weekStartsOn: 0 }), 'yyyy-MM-dd');
+      const mon = startOfWeek(today, { weekStartsOn: 1 });
+      const sat = addDays(mon, 5);
+      const start = format(mon, 'yyyy-MM-dd');
+      const end = format(sat, 'yyyy-MM-dd');
       setFilters({ dateStart: start, dateEnd: end });
     } else if (preset === 'month') {
       const start = format(startOfMonth(today), 'yyyy-MM-dd');

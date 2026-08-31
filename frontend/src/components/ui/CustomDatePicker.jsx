@@ -15,6 +15,7 @@ import {
   addWeeks,
   addMonths,
   subDays,
+  subWeeks,
   subMonths,
   startOfMonth,
   endOfMonth,
@@ -62,12 +63,37 @@ const GET_RANGE_PRESETS = (today = new Date()) => [
     }
   },
   {
+    label: 'This Week',
+    getValue: () => {
+      const mon = startOfWeek(today, { weekStartsOn: 1 });
+      const sat = addDays(mon, 5);
+      return {
+        from: startOfDay(mon),
+        to: endOfDay(sat)
+      };
+    }
+  },
+  {
     label: 'Next Week',
     getValue: () => {
       const nextW = addWeeks(today, 1);
+      const mon = startOfWeek(nextW, { weekStartsOn: 1 });
+      const sat = addDays(mon, 5);
       return {
-        from: startOfWeek(nextW, { weekStartsOn: 0 }),
-        to: endOfWeek(nextW, { weekStartsOn: 0 })
+        from: startOfDay(mon),
+        to: endOfDay(sat)
+      };
+    }
+  },
+  {
+    label: 'Last Week',
+    getValue: () => {
+      const prevW = subWeeks(today, 1);
+      const mon = startOfWeek(prevW, { weekStartsOn: 1 });
+      const sat = addDays(mon, 5);
+      return {
+        from: startOfDay(mon),
+        to: endOfDay(sat)
       };
     }
   },
