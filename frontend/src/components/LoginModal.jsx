@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  LuX as X, 
-  LuUser as User, 
-  LuLock as Lock, 
-  LuMail as Mail, 
+import {
+  LuX as X,
+  LuUser as User,
+  LuLock as Lock,
+  LuMail as Mail,
   LuShieldCheck as ShieldCheck,
   LuEye as Eye,
   LuEyeOff as EyeOff,
   LuLogIn as LogIn,
   LuUserPlus as UserPlus,
-  LuSparkles as Sparkles,
   LuCheck as Check,
   LuCircleAlert as AlertCircle
 } from 'react-icons/lu';
@@ -24,40 +23,18 @@ const roleOptions = [
   { value: 'Product Owner', label: 'Product Owner' }
 ];
 
-const demoAccounts = [
-  {
-    name: 'Vireak',
-    role: 'Super Admin',
-    email: 'vireak@pecc.com',
-    password: 'password123',
-    badgeBg: 'bg-purple-100 text-purple-700 border-purple-200'
-  },
-  {
-    name: 'QA Tester',
-    role: 'QA Tester',
-    email: 'tester@pecc.com',
-    password: 'password123',
-    badgeBg: 'bg-blue-100 text-blue-700 border-blue-200'
-  },
-  {
-    name: 'Dev Team',
-    role: 'Developer',
-    email: 'dev@pecc.com',
-    password: 'password123',
-    badgeBg: 'bg-emerald-100 text-emerald-700 border-emerald-200'
-  }
-];
+
 
 export default function LoginModal() {
-  const { 
-    isLoginModalOpen, 
-    closeLoginModal, 
-    authMode, 
-    setAuthMode, 
-    login, 
-    register, 
-    isLoading, 
-    authError, 
+  const {
+    isLoginModalOpen,
+    closeLoginModal,
+    authMode,
+    setAuthMode,
+    login,
+    register,
+    isLoading,
+    authError,
     clearError,
     isAuthenticated
   } = useAuthStore();
@@ -114,27 +91,14 @@ export default function LoginModal() {
     }
   };
 
-  const handleQuickDemo = async (demo) => {
-    setFormData({
-      name: demo.name,
-      email: demo.email,
-      password: demo.password,
-      role: demo.role
-    });
-    try {
-      const user = await login(demo.email, demo.password);
-      toast.success(`Logged in as ${user.name} (${user.role}) 🚀`);
-    } catch (err) {
-      toast.error('Failed to log in with demo account.');
-    }
-  };
+
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md backdrop-saturate-150 p-4 animate-in fade-in duration-200"
       onClick={isAuthenticated ? closeLoginModal : undefined}
     >
-      <div 
+      <div
         className="bg-white rounded-2xl shadow-2xl shadow-slate-950/20 max-w-md w-full overflow-hidden flex flex-col border border-slate-200/90 animate-in fade-in zoom-in-95 duration-200"
         onClick={(e) => e.stopPropagation()}
       >
@@ -156,17 +120,12 @@ export default function LoginModal() {
             </div>
             <div>
               <h2 className="text-lg font-bold tracking-tight text-white">
-                QA Control Center
+                Product Team
               </h2>
               <p className="text-xs text-blue-200 font-medium">
-                🔒 Authentication Required to Access Workspace
+                Authentication Required to Access Workspace
               </p>
             </div>
-          </div>
-
-          <div className="mt-4 px-3 py-1.5 bg-blue-950/60 border border-blue-500/30 rounded-xl text-[11px] text-blue-200 font-medium flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-blue-400 shrink-0" />
-            <span>Only <strong>Super Admin (Vireak)</strong> can create new team accounts.</span>
           </div>
         </div>
 
@@ -234,31 +193,6 @@ export default function LoginModal() {
           >
             Sign In to Workspace
           </CustomButton>
-
-          {/* Quick Demo Logins Section */}
-          <div className="pt-4 border-t border-slate-100">
-            <div className="flex items-center gap-1.5 mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                1-Click Quick Demo Accounts
-              </span>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {demoAccounts.map((demo) => (
-                <button
-                  key={demo.email}
-                  type="button"
-                  onClick={() => handleQuickDemo(demo)}
-                  className={`p-2 rounded-xl border text-left transition-all hover:scale-[1.02] cursor-pointer ${demo.badgeBg}`}
-                >
-                  <p className="text-xs font-bold leading-tight truncate">{demo.name}</p>
-                  <p className="text-[10px] opacity-80 leading-tight mt-0.5 truncate">{demo.role}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
         </form>
 
       </div>
