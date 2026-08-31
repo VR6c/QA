@@ -1,0 +1,273 @@
+================================================================================
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS v2.0)
+QA & Product Engineering Control Center
+================================================================================
+Document Version: 2.0.0
+Last Updated: August 31, 2026
+Author: Antigravity AI Engineering Team
+
+--------------------------------------------------------------------------------
+1. INTRODUCTION
+--------------------------------------------------------------------------------
+
+1.1 Purpose
+This Software Requirements Specification (SRS) document details the functional,
+non-functional, interface, and architectural requirements for the QA & Product
+Engineering Control Center (v2.0). It serves as the single source of truth for
+software engineers, quality assurance personnel, system administrators, and
+product management stakeholders.
+
+1.2 Scope of the System
+The QA & Product Engineering Control Center (PECC) is an enterprise-grade SaaS
+web application designed to streamline quality assurance workflows, task
+lifecycle tracking, product engineering delivery, role-based access governance,
+and executive performance analytics.
+
+Key capabilities include:
+- A 6-swimlane drag-and-drop Kanban workflow board.
+- An interactive, sortable data table for high-density task management.
+- Real-time executive KPI dashboards with automated target evaluation (Good vs.
+  Excellence thresholds).
+- Role-Based Access Control (RBAC) with granular user permissions, role
+  management, and strict data isolation.
+- An immutable audit trail system for governance and compliance.
+- System-wide feature configuration and multi-environment tracking (Development,
+  TestFlight, UAT, Production).
+
+1.3 Definitions, Acronyms, and Abbreviations
+- PECC: Product Engineering Control Center
+- SRS: Software Requirements Specification
+- RBAC: Role-Based Access Control
+- SPA: Single Page Application
+- JWT: JSON Web Token
+- IMP: Key Performance Indicator tracking system for quality assurance milestones
+- ODM: Object Document Mapper (Mongoose for MongoDB)
+- UAT: User Acceptance Testing
+
+--------------------------------------------------------------------------------
+2. OVERALL DESCRIPTION
+--------------------------------------------------------------------------------
+
+2.1 Product Architecture Overview
+The application follows a modern decoupled Monorepo architecture:
+- Frontend Layer: React 19 SPA powered by Vite, Tailwind CSS v4, Zustand state
+  management, and TanStack Query v5 for asynchronous data fetching and cache
+  management.
+- Backend Layer: Node.js & Express.js REST API with modular controllers,
+  middlewares, and services.
+- Database Layer: MongoDB v7+ with Mongoose schemas supporting single-tenant or
+  tenant-scoped data isolation.
+
++--------------------------------------------------------+
+|                   React 19 SPA (Vite)                  |
+|   (Kanban Board, Data Table, KPI Dashboard, Admin UI)  |
++---------------------------+----------------------------+
+                            | REST API (JSON)
++---------------------------v----------------------------+
+|                  Express.js API Backend                |
+|  (Auth, RBAC Guard, Rate Limiter, Audit Logger Engine) |
++---------------------------+----------------------------+
+                            | Mongoose ODM
++---------------------------v----------------------------+
+|                    MongoDB Database                    |
+|   (Tasks, Users, Roles, Permissions, Logs, Settings)   |
++--------------------------------------------------------+
+
+2.2 User Classes and Roles
+
+1. Super Admin:
+   Full root access to Admin Panel, User Management, Role/Permission Configuration,
+   System Settings, Data Exporters, and Global Audit Logs.
+
+2. Admin / QA Lead:
+   Access to all task boards, metric cards, team tasks across all owners, KPI
+   trackers, and CSV export tools.
+
+3. Tester / Employee:
+   Restricted access to personal tasks (strict user-level data isolation),
+   drag-and-drop status changes, profile update, and individual KPI submission.
+
+2.3 Operating Environment
+- Client Requirements: Modern Evergreen Web Browsers (Chrome 110+, Edge 110+,
+  Firefox 115+, Safari 16+). Minimum resolution: 1280x720.
+- Server Requirements: Node.js runtime v20+, MongoDB v7.0+.
+- Deployment Platform: Vercel / Docker containerized environments with support
+  for local MongoDB fallback.
+
+--------------------------------------------------------------------------------
+3. SPECIFIC FUNCTIONAL REQUIREMENTS
+--------------------------------------------------------------------------------
+
+3.1 Authentication & Profile Governance
+- REQ-AUTH-1 (User Login): System shall support secure username/email login with
+  password verification using BCrypt hashing (10 rounds).
+- REQ-AUTH-2 (JWT Token Issuance): On valid credentials, system shall generate
+  a signed JSON Web Token (JWT) containing user ID, role, and permissions.
+- REQ-AUTH-3 (Session Hydration): Front-end store (authStore) shall validate
+  existing tokens on boot (/api/auth/me) and populate user state.
+- REQ-AUTH-4 (User Profile & Avatar): Users shall be able to view their profile,
+  change passwords, and select/upload an avatar image.
+
+3.2 Task Management & Workflow Engine
+- REQ-TASK-1 (Task Lifecycle Swimlanes): System shall categorize tasks across 6
+  defined workflow swimlanes:
+  1. Feedback & Issue (feedback)
+  2. In Progress (progress)
+  3. Testing / QA (testing)
+  4. QA Success (success)
+  5. Done / Deployed (done)
+  6. Backlog / Pending (backlog)
+- REQ-TASK-2 (Task Drag-and-Drop): Users shall be able to drag cards between
+  swimlanes using @dnd-kit with optimistic UI updates and instant API status
+  synchronizations.
+- REQ-TASK-3 (Environment Tagging): Tasks must be tagged with target push-to
+  environment (Development, Production, TestFlight, UAT).
+- REQ-TASK-4 (KPI Category Linking): Tasks can be assigned an IMP KPI category
+  (quick_test, finding_product_error, conduct_testing, new_idea, research_template).
+- REQ-TASK-5 (Owner Allocation): Tasks can be assigned to designated owners/team
+  members with role tags and custom color themes.
+
+3.3 Interactive Views & Analytics
+- REQ-VIEW-1 (Kanban Board): High-level visual column layout with quick status
+  transitions, search filtering, and task details modals.
+- REQ-VIEW-2 (Sortable Data Table): Compact grid view with column sorting (Date,
+  Title, Status, Owner, Environment) and inline action toggles.
+- REQ-VIEW-3 (Executive KPI Dashboard): Visual analytics center rendering:
+  - Task Status Distribution (Donut Chart)
+  - Environment Breakdown (Bar Chart)
+  - Daily Volume Activity (Area Chart)
+  - Column Capacity Load (Bar Chart)
+- REQ-VIEW-4 (IMP Goal Tracker & Custom KPI Modal): Interactive tracker
+  comparing user metrics against Good vs. Excellence performance targets.
+
+3.4 Data Filtering & Export System
+- REQ-FILTER-1 (Multi-Criteria Filtering): System must support real-time composite
+  filtering by text query (Title, Reason, Remark), Status, Push-To Environment,
+  Owner, KPI Category, Date Range, and Month Tabs (12 months of 2026).
+- REQ-FILTER-2 (CSV Exporter): Users can export filtered tasks into standard
+  .csv format containing full task schema attributes.
+
+3.5 Role-Based Access Control (RBAC) & Governance
+- REQ-RBAC-1 (Granular Permission Checks): Endpoints must enforce RBAC middleware
+  (checkPermission('module.action')).
+- REQ-RBAC-2 (Role Management): Super Admins can create custom roles with tailored
+  permission lists (e.g., user.view, role.edit).
+- REQ-RBAC-3 (Data Isolation): Non-admin users are strictly isolated to view and
+  edit only tasks created by or assigned to themselves.
+- REQ-RBAC-4 (Immutable Audit Logging): All administrative and state-changing
+  actions (USER_CREATED, ROLE_PERMISSIONS_CHANGED, SETTING_DISABLED) are recorded
+  with user metadata, IP address, timestamp, and before/after state diffs.
+
+3.6 System Settings
+- REQ-SETTING-1 (Global Configuration): System configuration keys stored in MongoDB
+  (Setting model) control global application behaviors, feature toggles, security
+  parameters, and UI defaults.
+
+--------------------------------------------------------------------------------
+4. NON-FUNCTIONAL REQUIREMENTS
+--------------------------------------------------------------------------------
+
+4.1 Performance & Responsiveness
+- NFR-PERF-1: Backend API endpoints shall respond in less than 150ms under normal
+  operating load (100 concurrent requests).
+- NFR-PERF-2: Frontend UI rendering shall maintain 60 FPS during drag-and-drop
+  operations.
+- NFR-PERF-3: Client state query caching (staleTime: 30000ms) prevents unnecessary
+  re-fetching while allowing instant background refetch on user interaction.
+
+4.2 Security & Compliance
+- NFR-SEC-1: Passwords must be hashed using BCrypt prior to database storage.
+  Plain text passwords shall never be logged or stored.
+- NFR-SEC-2: API endpoints enforce rate-limiting (e.g., 5 login attempts per window,
+  100 API calls per minute) to prevent brute force or denial-of-service attacks.
+- NFR-SEC-3: Cross-Origin Resource Sharing (CORS) is configured to allow requests
+  only from trusted client origins.
+
+4.3 Reliability & Availability
+- NFR-REL-1: Automatic database connection fallback (Production Atlas -> Local
+  MongoDB fallback) guarantees maximum uptime during development/staging setups.
+- NFR-REL-2: Global error boundaries in React prevent full app crashes in the
+  event of unexpected runtime UI exceptions.
+
+--------------------------------------------------------------------------------
+5. ENTITY-RELATIONSHIP SCHEMA SPECIFICATIONS
+--------------------------------------------------------------------------------
+
+5.1 Task Model (Task)
+{
+  title: String (required, max 5000),
+  status: Enum ['feedback', 'progress', 'testing', 'success', 'done', 'done_production', 'backlog'],
+  pushTo: Enum ['Development', 'Production', 'TestFlight', 'UAT'],
+  reason: String,
+  timeline: String,
+  remark: String,
+  date: String (YYYY-MM-DD),
+  flowType: Enum ['none', 'monthly', 'weekly', 'yearly'],
+  flowValue: String,
+  kpiCategory: String,
+  user: String,
+  owner: String,
+  timestamps: true
+}
+
+5.2 User Model (User)
+{
+  name: String (required),
+  username: String (required, unique),
+  email: String (required, unique),
+  password: String (hashed),
+  status: Enum ['Active', 'Inactive', 'Locked'],
+  role_id: ObjectId (ref: 'Role'),
+  role: String,
+  avatar: String,
+  last_login_at: Date,
+  timestamps: true
+}
+
+5.3 Role Model (Role)
+{
+  name: String (required, unique),
+  code: String (required, unique),
+  description: String,
+  status: Enum ['Active', 'Inactive'],
+  is_system_role: Boolean,
+  permissions: [String], // Array of permission codes like 'user.view', 'role.edit'
+  timestamps: true
+}
+
+5.4 Activity Log Model (ActivityLog)
+{
+  activity_id: String (required, unique),
+  user_id: String,
+  user_name: String,
+  user_email: String,
+  role_name: String,
+  module: String,
+  action: String,
+  target_type: String,
+  target_id: String,
+  target_name: String,
+  description: String,
+  old_value: Mixed,
+  new_value: Mixed,
+  ip_address: String,
+  status: Enum ['Success', 'Failed', 'Denied'],
+  timestamps: true
+}
+
+--------------------------------------------------------------------------------
+6. VERIFICATION & ACCEPTANCE CRITERIA
+--------------------------------------------------------------------------------
+
+1. Task Operations: Successful creation, modification, status transition via
+   drag-and-drop, and deletion of tasks with live UI update.
+2. Security & RBAC: Verification that regular non-admin users cannot access
+   administrative endpoints (/api/admin/*) or view tasks belonging to other users.
+3. Audit Trail: Verification that any administrative role change or setting toggle
+   creates an immutable entry in the ActivityLog collection.
+4. KPI Analytics: Verification that task KPI metrics correctly map to user goal
+   targets and update donut/bar charts dynamically.
+
+================================================================================
+END OF DOCUMENT
+================================================================================
