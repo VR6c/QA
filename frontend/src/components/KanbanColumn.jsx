@@ -86,7 +86,7 @@ export default function KanbanColumn({ id, tasks = [], onEdit, onDelete }) {
       {/* Droppable Swimlane Body */}
       <div 
         ref={setNodeRef}
-        className={`flex-1 p-2.5 space-y-2.5 min-h-[380px] transition-colors ${
+        className={`flex-1 p-2 space-y-2 min-h-[120px] max-h-[700px] max-h-[calc(100vh-220px)] overflow-y-auto pb-2 transition-colors ${
           isOver ? 'bg-blue-50/60 ring-2 ring-blue-400 ring-inset' : ''
         }`}
       >

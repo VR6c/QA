@@ -39,8 +39,8 @@ const statusBorderColors = {
   backlog: 'border-l-sky-500 hover:border-l-sky-600 shadow-sky-500/5'
 };
 
-export default function TaskCard({ task, onEdit, onDelete }) {
-  const taskId = String(task.id || task._id);
+export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) {
+  const taskId = String(task?.id || task?._id || '');
   const {
     attributes,
     listeners,
@@ -48,15 +48,20 @@ export default function TaskCard({ task, onEdit, onDelete }) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: taskId });
+  } = useSortable({ id: taskId, disabled: isOverlay });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.8 : 1,
-    scale: isDragging ? 1.02 : 1,
-    touchAction: 'none'
-  };
+  const style = isOverlay
+    ? {
+        cursor: 'grabbing',
+        touchAction: 'none'
+      }
+    : {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.35 : 1,
+        scale: isDragging ? 1.02 : 1,
+        touchAction: 'none'
+      };
 
   const formattedDate = (() => {
     try {
@@ -74,11 +79,15 @@ export default function TaskCard({ task, onEdit, onDelete }) {
 
   return (
     <div
-      ref={setNodeRef}
+      ref={isOverlay ? undefined : setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className={`bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative cursor-grab active:cursor-grabbing border-l-[5px] ${cardBorderClass}`}
+      {...(isOverlay ? {} : attributes)}
+      {...(isOverlay ? {} : listeners)}
+      className={`bg-white rounded-xl border p-3 transition-all duration-200 group relative border-l-[4px] ${cardBorderClass} ${
+        isOverlay 
+          ? 'shadow-2xl scale-[1.03] border-blue-400 ring-2 ring-blue-400/30 cursor-grabbing z-50 rotate-1' 
+          : 'border-slate-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-grab active:cursor-grabbing'
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
 
