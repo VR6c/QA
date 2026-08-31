@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Owner from '../models/Owner.js';
 import Task from '../models/Task.js';
 import { recordActivity } from '../services/auditLogger.js';
@@ -26,7 +27,13 @@ export const ownerController = {
         owners = createdDocs.map(doc => doc.toObject());
       }
 
-      return sendSuccess(res, owners, { total: owners.length });
+      const formattedOwners = owners.map(o => ({
+        ...o,
+        id: (o.id || o._id)?.toString(),
+        _id: (o._id || o.id)?.toString()
+      }));
+
+      return sendSuccess(res, formattedOwners, { total: formattedOwners.length });
     } catch (error) {
       console.error('Error fetching owners:', error);
       return sendError(res, error.message || 'Failed to fetch owners', 500, 'ERR_INTERNAL');
@@ -59,6 +66,12 @@ export const ownerController = {
 
       await newOwner.save();
 
+      const ownerObj = {
+        ...newOwner.toObject(),
+        id: newOwner._id.toString(),
+        _id: newOwner._id.toString()
+      };
+
       recordActivity({
         req,
         module: 'Owner Management',
@@ -70,7 +83,7 @@ export const ownerController = {
         newValue: { name: newOwner.name, role: newOwner.role, color: newOwner.color }
       });
 
-      return sendSuccess(res, newOwner, null, 'Owner created successfully', 201);
+      return sendSuccess(res, ownerObj, null, 'Owner created successfully', 201);
     } catch (error) {
       console.error('Error creating owner:', error);
       return sendError(res, error.message || 'Failed to create owner', 400, 'ERR_VALIDATION');
@@ -82,6 +95,10 @@ export const ownerController = {
     try {
       const { id } = req.params;
       const { name, role, color } = req.body;
+
+      if (!id || id === 'undefined' || id === 'null' || !mongoose.Types.ObjectId.isValid(id)) {
+        return sendError(res, `Invalid Owner ID: ${id}`, 400, 'ERR_VALIDATION');
+      }
 
       const currentOwner = await Owner.findById(id);
       if (!currentOwner) {
@@ -122,6 +139,12 @@ export const ownerController = {
         await Task.updateMany({ owner: oldName }, { owner: newName });
       }
 
+      const ownerObj = {
+        ...currentOwner.toObject(),
+        id: currentOwner._id.toString(),
+        _id: currentOwner._id.toString()
+      };
+
       recordActivity({
         req,
         module: 'Owner Management',
@@ -134,7 +157,7 @@ export const ownerController = {
         newValue: { name: currentOwner.name, role: currentOwner.role, color: currentOwner.color }
       });
 
-      return sendSuccess(res, currentOwner, null, 'Owner updated successfully');
+      return sendSuccess(res, ownerObj, null, 'Owner updated successfully');
     } catch (error) {
       console.error('Error updating owner:', error);
       return sendError(res, error.message || 'Failed to update owner', 400, 'ERR_VALIDATION');
@@ -145,6 +168,11 @@ export const ownerController = {
   deleteOwner: async (req, res) => {
     try {
       const { id } = req.params;
+
+      if (!id || id === 'undefined' || id === 'null' || !mongoose.Types.ObjectId.isValid(id)) {
+        return sendError(res, `Invalid Owner ID: ${id}`, 400, 'ERR_VALIDATION');
+      }
+
       const owner = await Owner.findById(id);
 
       if (!owner) {
@@ -171,7 +199,7 @@ export const ownerController = {
         oldValue: { name: owner.name, role: owner.role }
       });
 
-      return sendSuccess(res, { id }, null, `Owner "${deletedName}" removed. Tasks reassigned to Unassigned.`);
+      return sendSuccess(res, { id: owner._id.toString(), _id: owner._id.toString() }, null, `Owner "${deletedName}" removed. Tasks reassigned to Unassigned.`);
     } catch (error) {
       console.error('Error deleting owner:', error);
       return sendError(res, error.message || 'Failed to delete owner', 500, 'ERR_INTERNAL');

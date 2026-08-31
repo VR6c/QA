@@ -3,11 +3,12 @@ import { api } from '../lib/api';
 import { toast } from 'sonner';
 
 export const DEFAULT_OWNERS_FALLBACK = [
-  { id: '1', name: 'Unassigned', role: 'General', color: 'slate', isDefault: true },
-  { id: '2', name: 'Vireak', role: 'QA Lead', color: 'indigo', isDefault: true },
-  { id: '3', name: 'QA Team', role: 'QA Tester', color: 'blue', isDefault: true },
-  { id: '4', name: 'Dev Team', role: 'Developer', color: 'emerald', isDefault: true },
-  { id: '5', name: 'Product Manager', role: 'Product Owner', color: 'purple', isDefault: true }
+  { id: '1', _id: '1', name: 'Unassigned', role: 'General', color: 'slate', isDefault: true },
+  { id: '2', _id: '2', name: 'Vireak', role: 'QA', color: 'indigo', isDefault: true },
+  { id: '3', _id: '3', name: 'Bong Kea', role: 'Product Owner', color: 'blue', isDefault: true },
+  { id: '4', _id: '4', name: 'Ratha', role: 'Product Owner', color: 'emerald', isDefault: true },
+  { id: '5', _id: '5', name: 'Bong Roeun', role: 'Product Owner', color: 'purple', isDefault: true },
+  { id: '6', _id: '6', name: 'Bong Thong', role: 'Product Owner', color: 'purple', isDefault: true }
 ];
 
 export function useOwners() {
@@ -18,7 +19,12 @@ export function useOwners() {
     queryFn: async () => {
       try {
         const response = await api.getOwners();
-        const ownerList = response.data || response.owners || (Array.isArray(response) ? response : []);
+        const rawList = response.data || response.owners || (Array.isArray(response) ? response : []);
+        const ownerList = rawList.map(o => ({
+          ...o,
+          id: (o.id || o._id)?.toString(),
+          _id: (o._id || o.id)?.toString()
+        }));
         return ownerList && ownerList.length > 0 ? ownerList : DEFAULT_OWNERS_FALLBACK;
       } catch (err) {
         console.warn('Backend owners API error, using fallback options', err);

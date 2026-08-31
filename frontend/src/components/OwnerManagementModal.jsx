@@ -70,8 +70,13 @@ export default function OwnerManagementModal({ isOpen, onClose, owners = [], onC
     setErrorMsg('');
     setIsSubmitting(true);
     try {
+      const ownerId = editingOwner?.id || editingOwner?._id;
       if (editingOwner) {
-        await onUpdateOwner({ id: editingOwner.id, data: formData });
+        if (!ownerId) {
+          setErrorMsg('Unable to identify target owner ID for update.');
+          return;
+        }
+        await onUpdateOwner({ id: ownerId, data: formData });
       } else {
         await onCreateOwner(formData);
       }
@@ -89,9 +94,14 @@ export default function OwnerManagementModal({ isOpen, onClose, owners = [], onC
       return;
     }
     if (owner.name === 'Unassigned') return;
+    const targetId = owner?.id || owner?._id;
+    if (!targetId) {
+      toast.error('Unable to delete owner: missing ID.');
+      return;
+    }
     try {
-      await onDeleteOwner(owner.id);
-      if (editingOwner?.id === owner.id) {
+      await onDeleteOwner(targetId);
+      if ((editingOwner?.id || editingOwner?._id) === targetId) {
         handleStartCreate();
       }
     } catch (err) {
@@ -267,7 +277,7 @@ export default function OwnerManagementModal({ isOpen, onClose, owners = [], onC
                 const isUnassigned = owner.name === 'Unassigned';
 
                 return (
-                  <div key={owner.id || owner.name} className="p-3 flex items-center justify-between hover:bg-slate-50/80 transition-colors">
+                  <div key={owner.id || owner._id || owner.name} className="p-3 flex items-center justify-between hover:bg-slate-50/80 transition-colors">
                     <div className="flex items-center gap-3">
                       <span className={`w-2.5 h-2.5 rounded-full ${dotColor}`} />
                       <div>
