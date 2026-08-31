@@ -340,7 +340,7 @@ function ControlCenterApp() {
             )}
 
             {view === 'calendar' && (
-              <MyCalendarView tasks={filteredTasks} owners={owners} />
+              <MyCalendarView tasks={tasks} owners={owners} />
             )}
 
             {view === 'reports' && (

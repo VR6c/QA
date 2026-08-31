@@ -29,6 +29,14 @@ import useUIStore from '../../stores/uiStore';
 import { CustomSelect } from '../ui';
 import { isUserOwnerMatch } from '../../lib/kpiConstants';
 
+const STATUS_CONFIG = {
+  done: { label: 'Completed', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
+  testing: { label: 'Testing / QA', bg: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500', bar: 'bg-amber-500' },
+  in_progress: { label: 'In Progress', bg: 'bg-blue-50 text-blue-700 border-blue-200/80', dot: 'bg-blue-500', bar: 'bg-blue-500' },
+  backlog: { label: 'Backlog', bg: 'bg-slate-100 text-slate-700 border-slate-200/80', dot: 'bg-slate-400', bar: 'bg-slate-400' },
+  feedback: { label: 'Feedback / Issue', bg: 'bg-rose-50 text-rose-700 border-rose-200/80', dot: 'bg-rose-500', bar: 'bg-rose-500' }
+};
+
 export default function MyCalendarView({ tasks = [], owners = [] }) {
   const localTimeZone = getLocalTimeZone();
   const currentUser = useAuthStore((state) => state.user);
@@ -302,75 +310,123 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
         </div>
 
         {/* Selected Date Agenda Sidebar */}
-        <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs space-y-4 flex flex-col">
-          {/* Agenda Header */}
-          <div className="border-b border-slate-100 pb-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Agenda</span>
-              <span className="text-xs font-mono text-slate-400">{selectedDateStr}</span>
+        <div className="lg:col-span-1 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4 flex flex-col h-full min-h-[500px] overflow-hidden transition-all">
+          {/* Premium Agenda Header Card */}
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 p-4 text-white shadow-sm">
+            {/* Ambient Background Decorative Glow */}
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-500/20 rounded-full blur-xl pointer-events-none" />
+            <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-indigo-500/20 rounded-full blur-xl pointer-events-none" />
+
+            <div className="relative z-10 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-xs">
+                  <Sparkles className="w-3 h-3 text-blue-300" />
+                  Agenda
+                </span>
+                <span className="text-[11px] font-mono font-medium text-slate-300 bg-white/10 px-2 py-0.5 rounded-md border border-white/10">
+                  {selectedDateStr}
+                </span>
+              </div>
+
+              <div className="pt-1">
+                <h3 className="text-lg font-black tracking-tight text-white leading-tight">
+                  {selectedDate.toDate(localTimeZone).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </h3>
+                <div className="flex items-center justify-between mt-1 text-xs text-slate-300">
+                  <span>Scheduled Tasks</span>
+                  <span className="font-bold text-white px-2 py-0.5 rounded-full bg-blue-600/80 text-[11px] border border-blue-400/40">
+                    {agendaTasks.length} {agendaTasks.length === 1 ? 'Task' : 'Tasks'}
+                  </span>
+                </div>
+              </div>
             </div>
-            <h3 className="text-base font-extrabold text-slate-900 mt-1">
-              {selectedDate.toDate(localTimeZone).toLocaleDateString('en-US', {
-                weekday: 'short',
-                month: 'short',
-                day: 'numeric'
-              })}
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {agendaTasks.length} task{agendaTasks.length === 1 ? '' : 's'} scheduled
-            </p>
           </div>
 
-          {/* Add Task Button for Selected Date */}
+          {/* Quick Action: Add Task for Selected Date */}
           <button
             onClick={() => handleAddTaskOnDate(selectedDateStr)}
-            className="w-full py-2 px-3 bg-slate-50 hover:bg-blue-50 hover:text-blue-700 text-slate-700 rounded-xl border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-full py-2.5 px-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-xs hover:shadow-md active:scale-[0.99] cursor-pointer group"
           >
-            <Plus className="w-4 h-4 text-blue-600" />
-            Add Task on {selectedDateStr}
+            <Plus className="w-4 h-4 text-white group-hover:rotate-90 transition-transform duration-200" />
+            <span>Add Task on {selectedDateStr}</span>
           </button>
 
-          {/* Agenda Task List */}
-          <div className="flex-1 space-y-2.5 overflow-y-auto max-h-[480px] no-scrollbar">
+          {/* Agenda Tasks List Container (Fits up to 10 cards before scrolling) */}
+          <div className="flex-1 min-h-0 space-y-2 overflow-y-auto pr-0.5 max-h-[720px] custom-scrollbar">
             {agendaTasks.length === 0 ? (
-              <div className="py-12 text-center text-slate-400 space-y-2">
-                <Sparkles className="w-8 h-8 mx-auto text-slate-300 stroke-[1.5]" />
-                <p className="text-xs font-medium">No tasks scheduled on this date.</p>
-                <p className="text-[11px] text-slate-400">Click above to schedule a new task.</p>
+              <div className="h-full flex flex-col items-center justify-center py-10 px-4 text-center space-y-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-200">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center border border-blue-100 shadow-2xs">
+                  <Sparkles className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-slate-700">No Tasks Scheduled</p>
+                  <p className="text-[11px] text-slate-400 leading-normal max-w-[180px]">
+                    No task deadline or schedule set for this date.
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleAddTaskOnDate(selectedDateStr)}
+                  className="px-3 py-1.5 bg-white hover:bg-slate-100 text-blue-600 text-xs font-bold rounded-lg border border-slate-200 shadow-2xs transition-all cursor-pointer"
+                >
+                  + Create Task
+                </button>
               </div>
             ) : (
-              agendaTasks.map((t) => (
-                <div
-                  key={t.id || t._id}
-                  onClick={() => handleSelectTask(t)}
-                  className="p-3 bg-slate-50/80 hover:bg-blue-50/60 rounded-xl border border-slate-200/80 hover:border-blue-300 transition-all cursor-pointer text-left space-y-1.5"
-                >
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border ${t.status === 'done'
-                          ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                          : t.status === 'testing'
-                            ? 'bg-amber-100 text-amber-800 border-amber-200'
-                            : 'bg-blue-100 text-blue-800 border-blue-200'
-                        }`}
-                    >
-                      {t.status}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono truncate max-w-[80px]">
-                      {t.pushTo || 'General'}
-                    </span>
+              agendaTasks.map((t) => {
+                const statusInfo = STATUS_CONFIG[t.status] || STATUS_CONFIG.backlog;
+                return (
+                  <div
+                    key={t.id || t._id}
+                    onClick={() => handleSelectTask(t)}
+                    className="group relative p-2.5 bg-white hover:bg-blue-50/40 rounded-xl border border-slate-200/80 hover:border-blue-400/80 shadow-2xs hover:shadow-sm transition-all duration-200 cursor-pointer text-left space-y-1.5 overflow-hidden shrink-0"
+                  >
+                    {/* Status Accent Bar on Left */}
+                    <div className={`absolute top-0 left-0 bottom-0 w-1 ${statusInfo.bar}`} />
+
+                    {/* Card Top Row: Status Badge & PushTo Environment */}
+                    <div className="flex items-center justify-between gap-2 pl-1.5">
+                      <span
+                        className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-md border ${statusInfo.bg}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dot}`} />
+                        {statusInfo.label}
+                      </span>
+
+                      {t.pushTo && (
+                        <span className="text-[10px] font-semibold font-mono text-slate-500 bg-slate-100 group-hover:bg-blue-100/60 group-hover:text-blue-700 px-2 py-0.5 rounded-md transition-colors truncate max-w-[90px]">
+                          {t.pushTo}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Card Title */}
+                    <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug line-clamp-2 pl-1.5">
+                      {t.title}
+                    </h4>
+
+                    {/* Card Footer: Owner Tag & Dev Deadline if present */}
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 pl-1.5">
+                      <div className="flex items-center gap-1 text-slate-600 font-medium">
+                        <div className="w-4 h-4 rounded-full bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-600 flex items-center justify-center font-bold text-[9px]">
+                          {(t.owner || 'U')[0].toUpperCase()}
+                        </div>
+                        <span className="truncate max-w-[100px]">{t.owner || 'Unassigned'}</span>
+                      </div>
+
+                      {t.dateLineDev && (
+                        <span className="flex items-center gap-1 font-mono text-[9.5px] text-amber-600 font-semibold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60">
+                          <Clock className="w-2.5 h-2.5 text-amber-500" />
+                          {t.dateLineDev.substring(5, 16)}
+                        </span>
+                      )}
+                    </div>
                   </div>
-
-                  <h4 className="text-xs font-bold text-slate-900 leading-snug">{t.title}</h4>
-
-                  {t.owner && (
-                    <p className="text-[10px] text-slate-500 flex items-center gap-1">
-                      <User className="w-3 h-3 text-slate-400" />
-                      {t.owner}
-                    </p>
-                  )}
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

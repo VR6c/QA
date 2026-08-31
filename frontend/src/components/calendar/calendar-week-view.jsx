@@ -58,7 +58,7 @@ export function CalendarWeekView({ value, onChange, tasks = [], onSelectTask, on
             <div
               key={dateStr}
               onClick={() => onChange(dateObj)}
-              className={`rounded-2xl border p-3 flex flex-col min-h-[220px] transition-all cursor-pointer ${
+              className={`rounded-2xl border p-3 flex flex-col h-[420px] overflow-hidden transition-all cursor-pointer ${
                 isSelected
                   ? 'bg-blue-50/60 border-blue-500 shadow-md ring-2 ring-blue-400/20'
                   : isCurrentDay
@@ -92,7 +92,7 @@ export function CalendarWeekView({ value, onChange, tasks = [], onSelectTask, on
               </div>
 
               {/* Task Cards in Day Column */}
-              <div className="flex-1 space-y-2 overflow-y-auto no-scrollbar max-h-[380px]">
+              <div className="flex-1 min-h-0 space-y-2 overflow-y-auto no-scrollbar">
                 {dayTasks.length === 0 ? (
                   <div className="h-full flex items-center justify-center py-6">
                     <p className="text-xs text-slate-300 font-medium italic">No tasks</p>
