@@ -1,6 +1,12 @@
 import { create } from 'zustand';
+import { toast } from 'sonner';
 import { api } from '../lib/api';
 import { getSocket } from '../lib/socket';
+import {
+  playNotificationSound,
+  requestNotificationPermission,
+  showNativeNotification
+} from '../lib/notificationService';
 
 const useChatStore = create((set, get) => ({
   isOpen: false,
@@ -218,10 +224,41 @@ const useChatStore = create((set, get) => ({
       });
     });
 
+    // Request desktop notification permission when socket is initialized
+    requestNotificationPermission();
+
     // Receive Message Event
     socket.on('receive_message', (msg) => {
-      const { activeContactId, isOpen, messages, unreadCounts } = get();
+      const { activeContactId, isOpen, messages, unreadCounts, users } = get();
       const senderId = msg.senderId;
+      const senderObj = msg.sender || users.find(u => u.id === senderId);
+      const senderName = senderObj?.name || 'New Message';
+      const textPreview = msg.text
+        ? (msg.text.length > 60 ? msg.text.substring(0, 60) + '...' : msg.text)
+        : 'Sent an attachment';
+
+      // 1. Play real-time notification audio chime
+      playNotificationSound();
+
+      // 2. Show OS native desktop notification if window is hidden
+      showNativeNotification(`Message from ${senderName}`, {
+        body: textPreview,
+        icon: senderObj?.avatar || '/favicon.ico'
+      });
+
+      // 3. Show Sonner toast banner with instant Reply button if chat room is closed or with another contact
+      if (!isOpen || activeContactId !== senderId) {
+        toast(`💬 ${senderName}`, {
+          description: textPreview,
+          action: {
+            label: 'Reply',
+            onClick: () => {
+              set({ isOpen: true });
+              get().selectContact(senderId);
+            }
+          }
+        });
+      }
 
       if (activeContactId === senderId) {
         // Active chat room is open with this contact
