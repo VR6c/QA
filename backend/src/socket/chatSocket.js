@@ -45,8 +45,12 @@ export function setupChatSocket(httpServer) {
   });
 
   io.on('connection', async (socket) => {
-    const userId = socket.user.id;
-    const strUserId = userId.toString();
+    const userId = socket.user.id || socket.user._id || socket.user.userId;
+    const strUserId = userId ? userId.toString() : '';
+    if (!strUserId) {
+      console.warn('Socket connection missing valid user ID');
+      return;
+    }
 
     // 1. Track presence
     if (!onlineUsers.has(strUserId)) {
@@ -145,14 +149,26 @@ export function setupChatSocket(httpServer) {
         conversation.lastMessageAt = message.createdAt;
         await conversation.save();
 
-        const messageObj = message.toJSON();
-
-        // Populate sender info for recipient preview
         const senderUser = await User.findById(userId).select('name username avatar').lean();
-        messageObj.sender = senderUser;
+
+        // Construct message object with explicit string IDs for Socket.io payload
+        const messageObj = {
+          id: message._id.toString(),
+          conversationId: message.conversationId.toString(),
+          senderId: message.senderId.toString(),
+          receiverId: message.receiverId.toString(),
+          text: message.text,
+          attachments: message.attachments || [],
+          status: initialStatus,
+          deliveredAt: message.deliveredAt,
+          readAt: message.readAt,
+          createdAt: message.createdAt,
+          updatedAt: message.updatedAt,
+          sender: senderUser
+        };
 
         // Emit to receiver's socket room
-        io.to(`user:${receiverId}`).emit('receive_message', messageObj);
+        io.to(`user:${receiverId.toString()}`).emit('receive_message', messageObj);
 
         // Emit acknowledgment back to sender
         socket.emit('message_sent', messageObj);

@@ -228,10 +228,19 @@ const useChatStore = create((set, get) => ({
     requestNotificationPermission();
 
     // Receive Message Event
-    socket.on('receive_message', (msg) => {
+    socket.on('receive_message', (rawMsg) => {
+      const msg = {
+        ...rawMsg,
+        id: (rawMsg.id || rawMsg._id)?.toString(),
+        senderId: rawMsg.senderId?.toString(),
+        receiverId: rawMsg.receiverId?.toString(),
+        conversationId: rawMsg.conversationId?.toString()
+      };
+
       const { activeContactId, isOpen, messages, unreadCounts, users } = get();
       const senderId = msg.senderId;
-      const senderObj = msg.sender || users.find(u => u.id === senderId);
+      const activeId = activeContactId?.toString();
+      const senderObj = msg.sender || users.find(u => u.id?.toString() === senderId);
       const senderName = senderObj?.name || 'New Message';
       const textPreview = msg.text
         ? (msg.text.length > 60 ? msg.text.substring(0, 60) + '...' : msg.text)
@@ -247,7 +256,7 @@ const useChatStore = create((set, get) => ({
       });
 
       // 3. Show Sonner toast banner with instant Reply button if chat room is closed or with another contact
-      if (!isOpen || activeContactId !== senderId) {
+      if (!isOpen || activeId !== senderId) {
         toast(`💬 ${senderName}`, {
           description: textPreview,
           action: {
@@ -260,8 +269,8 @@ const useChatStore = create((set, get) => ({
         });
       }
 
-      if (activeContactId === senderId) {
-        // Active chat room is open with this contact
+      if (activeId === senderId) {
+        // Active chat room is open with this contact - append message instantly!
         set({ messages: [...messages, msg] });
 
         if (isOpen) {
@@ -283,11 +292,21 @@ const useChatStore = create((set, get) => ({
     });
 
     // Sent Message Acknowledgment
-    socket.on('message_sent', (msg) => {
+    socket.on('message_sent', (rawMsg) => {
+      const msg = {
+        ...rawMsg,
+        id: (rawMsg.id || rawMsg._id)?.toString(),
+        senderId: rawMsg.senderId?.toString(),
+        receiverId: rawMsg.receiverId?.toString(),
+        conversationId: rawMsg.conversationId?.toString()
+      };
+
       const { activeContactId, messages } = get();
-      if (activeContactId === msg.receiverId) {
+      const activeId = activeContactId?.toString();
+
+      if (activeId === msg.receiverId) {
         // Prevent duplicate appending
-        const exists = messages.some(m => m.id === msg.id);
+        const exists = messages.some(m => m.id?.toString() === msg.id);
         if (!exists) {
           set({ messages: [...messages, msg] });
         }

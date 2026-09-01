@@ -4,6 +4,14 @@ let socket = null;
 
 export const getSocket = () => socket;
 
+const getSocketServerUrl = () => {
+  if (typeof window === 'undefined') return 'http://localhost:5001';
+  if (window.location.hostname === 'localhost' && window.location.port !== '5001') {
+    return 'http://localhost:5001';
+  }
+  return window.location.origin;
+};
+
 export const connectSocket = (token) => {
   if (socket && socket.connected) return socket;
 
@@ -11,8 +19,10 @@ export const connectSocket = (token) => {
     socket.disconnect();
   }
 
+  const targetUrl = getSocketServerUrl();
+
   // Socket.io v4 client connection
-  socket = io(window.location.origin, {
+  socket = io(targetUrl, {
     auth: { token },
     query: { token },
     reconnection: true,
