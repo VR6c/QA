@@ -34,6 +34,11 @@ const chatMessageSchema = new mongoose.Schema({
     type: [attachmentSchema],
     default: []
   },
+  replyTo: {
+    id: String,
+    text: String,
+    senderName: String
+  },
   status: {
     type: String,
     enum: ['sent', 'delivered', 'read'],

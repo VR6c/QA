@@ -146,6 +146,7 @@ export const getMessages = async (req, res) => {
       receiverId: m.receiverId.toString(),
       text: m.text,
       attachments: m.attachments || [],
+      replyTo: m.replyTo || null,
       status: m.status,
       deliveredAt: m.deliveredAt,
       readAt: m.readAt,
@@ -166,7 +167,7 @@ export const getMessages = async (req, res) => {
 export const sendMessage = async (req, res) => {
   try {
     const currentUserId = req.user.id;
-    const { receiverId, text, attachments } = req.body;
+    const { receiverId, text, attachments, replyTo } = req.body;
 
     if (!receiverId) {
       return sendError(res, 'receiverId is required', 400, 'ERR_VALIDATION');
@@ -201,6 +202,7 @@ export const sendMessage = async (req, res) => {
       receiverId,
       text: cleanText,
       attachments: attachments || [],
+      replyTo: replyTo || null,
       status: initialStatus,
       deliveredAt
     });

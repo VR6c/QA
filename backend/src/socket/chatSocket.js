@@ -101,7 +101,7 @@ export function setupChatSocket(httpServer) {
     // 3. Send Message Event Handler
     socket.on('send_message', async (data, ackCallback) => {
       try {
-        const { receiverId, text, attachments } = data || {};
+        const { receiverId, text, attachments, replyTo } = data || {};
         if (!receiverId) {
           if (typeof ackCallback === 'function') ackCallback({ error: 'Receiver ID is required' });
           return;
@@ -140,6 +140,7 @@ export function setupChatSocket(httpServer) {
           receiverId: receiverId,
           text: cleanText,
           attachments: attachments || [],
+          replyTo: replyTo || null,
           status: initialStatus,
           deliveredAt
         });
@@ -159,6 +160,7 @@ export function setupChatSocket(httpServer) {
           receiverId: message.receiverId.toString(),
           text: message.text,
           attachments: message.attachments || [],
+          replyTo: message.replyTo || null,
           status: initialStatus,
           deliveredAt: message.deliveredAt,
           readAt: message.readAt,

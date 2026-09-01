@@ -1,3 +1,4 @@
+import React from 'react';
 import { create } from 'zustand';
 import { toast } from 'sonner';
 import { api } from '../lib/api';
@@ -7,6 +8,47 @@ import {
   requestNotificationPermission,
   showNativeNotification
 } from '../lib/notificationService';
+
+// Set to deduplicate message notifications so each message ID fires a toast exactly ONCE
+const notifiedMessageIds = new Set();
+
+const triggerMessageNotification = (msgId, senderName, textPreview, avatar, senderId, isOpen, activeContactId, selectContact, set) => {
+  if (!msgId || notifiedMessageIds.has(msgId)) {
+    return; // Already notified for this message ID!
+  }
+
+  notifiedMessageIds.add(msgId);
+  if (notifiedMessageIds.size > 200) {
+    const first = notifiedMessageIds.values().next().value;
+    notifiedMessageIds.delete(first);
+  }
+
+  // 1. Play real-time notification audio chime
+  playNotificationSound();
+
+  // 2. Show OS native desktop notification if window is hidden
+  showNativeNotification(`Message from ${senderName}`, {
+    body: textPreview,
+    icon: avatar || '/favicon.ico'
+  });
+
+  // 3. Show Sonner toast banner with instant Reply button for incoming messages
+  toast(senderName, {
+    description: textPreview,
+    icon: React.createElement('img', {
+      src: '/Icon/email.png',
+      alt: 'Email Icon',
+      className: 'w-5 h-5 object-contain shrink-0'
+    }),
+    action: {
+      label: 'Reply',
+      onClick: () => {
+        set({ isOpen: true });
+        selectContact(senderId);
+      }
+    }
+  });
+};
 
 const useChatStore = create((set, get) => ({
   isOpen: false,
@@ -114,7 +156,7 @@ const useChatStore = create((set, get) => ({
     set({ unreadCounts: unreadMap });
   },
 
-  sendMessage: async ({ text, attachments, currentUserId }) => {
+  sendMessage: async ({ text, attachments, replyTo, currentUserId }) => {
     const activeContactId = get().activeContactId;
     if (!activeContactId) return;
 
@@ -129,6 +171,7 @@ const useChatStore = create((set, get) => ({
       receiverId: activeContactId.toString(),
       text: cleanText,
       attachments: attachments || [],
+      replyTo: replyTo || null,
       status: 'sending',
       isPending: true,
       createdAt: new Date().toISOString()
@@ -145,7 +188,8 @@ const useChatStore = create((set, get) => ({
           socket.emit('send_message', {
             receiverId: activeContactId,
             text: cleanText,
-            attachments: attachments || []
+            attachments: attachments || [],
+            replyTo: replyTo || null
           }, (response) => {
             if (response?.error) {
               reject(new Error(response.error));
@@ -158,7 +202,8 @@ const useChatStore = create((set, get) => ({
         const res = await api.sendChatMessage({
           receiverId: activeContactId,
           text: cleanText,
-          attachments: attachments || []
+          attachments: attachments || [],
+          replyTo: replyTo || null
         });
         serverMsg = res.data || res;
       }
@@ -286,28 +331,18 @@ const useChatStore = create((set, get) => ({
         ? (msg.text.length > 60 ? msg.text.substring(0, 60) + '...' : msg.text)
         : 'Sent an attachment';
 
-      // 1. Play real-time notification audio chime
-      playNotificationSound();
-
-      // 2. Show OS native desktop notification if window is hidden
-      showNativeNotification(`Message from ${senderName}`, {
-        body: textPreview,
-        icon: senderObj?.avatar || '/favicon.ico'
-      });
-
-      // 3. Show Sonner toast banner with instant Reply button if chat room is closed or with another contact
-      if (!isOpen || activeId !== senderId) {
-        toast(`💬 ${senderName}`, {
-          description: textPreview,
-          action: {
-            label: 'Reply',
-            onClick: () => {
-              set({ isOpen: true });
-              get().selectContact(senderId);
-            }
-          }
-        });
-      }
+      // Deduplicated notification trigger (fires exactly once per message ID)
+      triggerMessageNotification(
+        msg.id,
+        senderName,
+        textPreview,
+        senderObj?.avatar,
+        senderId,
+        isOpen,
+        activeId,
+        get().selectContact,
+        set
+      );
 
       if (activeId === senderId) {
         // Active chat room is open with this contact - append message instantly!
@@ -427,25 +462,22 @@ const useChatStore = create((set, get) => ({
 
         set({ users: userList, unreadCounts: nextUnreadMap });
 
-        if (newUnreadSender) {
-          playNotificationSound();
-          showNativeNotification(`Message from ${newUnreadSender.name}`, {
-            body: newUnreadSender.lastMessage?.text || 'Sent an attachment',
-            icon: newUnreadSender.avatar || '/favicon.ico'
-          });
+        if (newUnreadSender && newUnreadSender.lastMessage) {
+          const lastMsg = newUnreadSender.lastMessage;
+          const msgId = lastMsg.id || lastMsg._id;
+          const textPreview = lastMsg.text || 'Sent an attachment';
 
-          if (!isOpen || activeContactId !== newUnreadSender.id) {
-            toast(`💬 ${newUnreadSender.name}`, {
-              description: newUnreadSender.lastMessage?.text || 'Sent an attachment',
-              action: {
-                label: 'Reply',
-                onClick: () => {
-                  set({ isOpen: true });
-                  get().selectContact(newUnreadSender.id);
-                }
-              }
-            });
-          }
+          triggerMessageNotification(
+            msgId,
+            newUnreadSender.name,
+            textPreview,
+            newUnreadSender.avatar,
+            newUnreadSender.id,
+            isOpen,
+            activeContactId,
+            get().selectContact,
+            set
+          );
         }
 
         // 2. Silent Active Chat Room Message Sync
