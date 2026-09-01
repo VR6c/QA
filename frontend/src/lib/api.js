@@ -321,5 +321,50 @@ export const api = {
       throw new Error(extractError(err, 'Failed to fetch historical reports'));
     }
     return res.json();
+  },
+
+  // Chat API
+  async getChatUsers() {
+    const res = await fetch('/api/chat/users', { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch chat users'));
+    }
+    return res.json();
+  },
+
+  async getChatMessages(params) {
+    const query = new URLSearchParams(params).toString();
+    const res = await fetch(`/api/chat/messages?${query}`, { headers: this.getAuthHeaders() });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to fetch chat messages'));
+    }
+    return res.json();
+  },
+
+  async sendChatMessage(messageData) {
+    const res = await fetch('/api/chat/messages', {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(messageData)
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to send chat message'));
+    }
+    return res.json();
+  },
+
+  async deleteChatMessage(messageId) {
+    const res = await fetch(`/api/chat/messages/${messageId}`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders()
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to delete message'));
+    }
+    return res.json();
   }
 };

@@ -20,6 +20,10 @@ import LoginModal from './components/LoginModal';
 import CreateUserModal from './components/CreateUserModal';
 import ProfileModal from './components/ProfileModal';
 import SuperAdminShell from './components/admin/SuperAdminShell';
+import ChatLauncher from './components/chat/ChatLauncher';
+import ChatModal from './components/chat/ChatModal';
+import useChatStore from './stores/chatStore';
+import { connectSocket, disconnectSocket } from './lib/socket';
 
 import Footer from './components/Footer';
 import ViewSkeleton, { MetricCardsSkeleton, FilterBarSkeleton } from './components/ViewSkeleton';
@@ -45,12 +49,28 @@ function ControlCenterApp() {
   const checkAuth = useAuthStore((state) => state.checkAuth);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const currentUser = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
+
+  const setupSocketListeners = useChatStore((state) => state.setupSocketListeners);
+  const fetchUsers = useChatStore((state) => state.fetchUsers);
 
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
+
+  // Socket.io Lifecycle and Chat Listener Setup (REQ-CHAT-2.1)
+  useEffect(() => {
+    if (isAuthenticated && token && currentUser) {
+      const socket = connectSocket(token);
+      const currentUserId = (currentUser.id || currentUser._id)?.toString();
+      setupSocketListeners(socket, currentUserId);
+      fetchUsers();
+    } else {
+      disconnectSocket();
+    }
+  }, [isAuthenticated, token, currentUser]);
 
   const {
     view,
@@ -396,6 +416,14 @@ function ControlCenterApp() {
         onClose={() => setIsCreateUserModalOpen(false)}
       />
 
+
+      {/* Live Chat Engine Components (REQ-CHAT-1) */}
+      {isAuthenticated && (
+        <>
+          <ChatModal />
+          <ChatLauncher />
+        </>
+      )}
 
       {/* Sonner Toast Container */}
       <Toaster position="bottom-right" richColors />

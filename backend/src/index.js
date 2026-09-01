@@ -1,11 +1,19 @@
+import http from 'http';
 import mongoose from 'mongoose';
 import app, { connectMongo } from './app.js';
+import { setupChatSocket } from './socket/chatSocket.js';
 
 const PORT = process.env.PORT || 5001;
 
-// Launch Express Server immediately
-const server = app.listen(PORT, () => {
-  console.log(`🚀 QA Control Center Express Server running on http://localhost:${PORT}`);
+// Create HTTP server wrapping Express app
+const server = http.createServer(app);
+
+// Initialize Socket.io chat server
+setupChatSocket(server);
+
+// Launch HTTP & Socket.io Server
+server.listen(PORT, () => {
+  console.log(`🚀 QA Control Center Backend & Socket.io running on http://localhost:${PORT}`);
 });
 
 server.on('error', (err) => {
