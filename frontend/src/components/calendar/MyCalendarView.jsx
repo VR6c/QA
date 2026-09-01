@@ -38,8 +38,11 @@ import { isUserOwnerMatch } from '../../lib/kpiConstants';
 
 const STATUS_CONFIG = {
   done: { label: 'Completed', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200/80', dot: 'bg-emerald-500', bar: 'bg-emerald-500' },
+  done_production: { label: 'Done Production', bg: 'bg-teal-50 text-teal-700 border-teal-200/80', dot: 'bg-teal-600', bar: 'bg-teal-600' },
+  success: { label: 'QA Success', bg: 'bg-purple-50 text-purple-700 border-purple-200/80', dot: 'bg-purple-500', bar: 'bg-purple-500' },
   testing: { label: 'Testing / QA', bg: 'bg-amber-50 text-amber-700 border-amber-200/80', dot: 'bg-amber-500', bar: 'bg-amber-500' },
   in_progress: { label: 'In Progress', bg: 'bg-blue-50 text-blue-700 border-blue-200/80', dot: 'bg-blue-500', bar: 'bg-blue-500' },
+  progress: { label: 'In Progress', bg: 'bg-blue-50 text-blue-700 border-blue-200/80', dot: 'bg-blue-500', bar: 'bg-blue-500' },
   backlog: { label: 'Backlog', bg: 'bg-slate-100 text-slate-700 border-slate-200/80', dot: 'bg-slate-400', bar: 'bg-slate-400' },
   feedback: { label: 'Feedback / Issue', bg: 'bg-rose-50 text-rose-700 border-rose-200/80', dot: 'bg-rose-500', bar: 'bg-rose-500' }
 };
@@ -67,7 +70,9 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
     { value: 'all', label: 'All Statuses' },
     { value: 'in_progress', label: 'In Progress', colorBadge: 'bg-blue-500' },
     { value: 'testing', label: 'Testing / QA', colorBadge: 'bg-amber-500' },
+    { value: 'success', label: 'QA Success', colorBadge: 'bg-purple-500' },
     { value: 'done', label: 'Completed', colorBadge: 'bg-emerald-500' },
+    { value: 'done_production', label: 'Done Production', colorBadge: 'bg-teal-600' },
     { value: 'backlog', label: 'Backlog', colorBadge: 'bg-slate-400' },
     { value: 'feedback', label: 'Feedback / Issue', colorBadge: 'bg-rose-500' }
   ], []);
@@ -91,7 +96,11 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
 
       // 3. Status Filter
       if (filterStatus !== 'all') {
-        if (t.status !== filterStatus) return false;
+        if (filterStatus === 'in_progress') {
+          if (t.status !== 'in_progress' && t.status !== 'progress') return false;
+        } else if (t.status !== filterStatus) {
+          return false;
+        }
       }
 
       return true;

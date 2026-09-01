@@ -17,7 +17,9 @@ import {
 const STATUS_SECTIONS = [
   { id: 'in_progress', label: 'In Progress', color: 'blue', icon: Clock },
   { id: 'testing', label: 'Testing / QA', color: 'amber', icon: AlertCircle },
+  { id: 'success', label: 'QA Success', color: 'purple', icon: CheckCircle },
   { id: 'done', label: 'Completed', color: 'emerald', icon: CheckCircle },
+  { id: 'done_production', label: 'Done Production', color: 'teal', icon: CheckCircle },
   { id: 'backlog', label: 'Backlog / Open', color: 'slate', icon: Layers },
   { id: 'feedback', label: 'Feedback / Issue', color: 'rose', icon: AlertCircle }
 ];
@@ -72,7 +74,10 @@ export function CalendarDayView({ value, tasks = [], onSelectTask, onAddTaskOnDa
       {/* Categorized Task Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {STATUS_SECTIONS.map(({ id: statusKey, label, color, icon: Icon }) => {
-          const sectionTasks = dayTasks.filter(t => t.status === statusKey);
+          const sectionTasks = dayTasks.filter(t => {
+            if (statusKey === 'in_progress') return t.status === 'in_progress' || t.status === 'progress';
+            return t.status === statusKey;
+          });
 
           return (
             <div key={statusKey} className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-3 flex flex-col">
