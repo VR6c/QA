@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import useChatStore from '../../stores/chatStore';
 import useAuthStore from '../../stores/authStore';
+import EmojiStickerPicker from './EmojiStickerPicker';
 
 function getInitials(name) {
   if (!name) return 'U';
@@ -34,6 +35,7 @@ export default function ChatRoom() {
   const [attachments, setAttachments] = useState([]);
   const [attachmentUrlInput, setAttachmentUrlInput] = useState('');
   const [showAttachInput, setShowAttachInput] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [isResolved, setIsResolved] = useState(false);
   const messagesEndRef = useRef(null);
@@ -108,6 +110,29 @@ export default function ChatRoom() {
 
   const handleRemoveAttachment = (index) => {
     setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSelectEmoji = (emoji) => {
+    setInputText((prev) => prev + emoji);
+  };
+
+  const handleSelectSticker = async (sticker) => {
+    setShowEmojiPicker(false);
+    try {
+      await sendMessage({
+        text: sticker.name,
+        attachments: [{
+          name: sticker.name,
+          url: sticker.emoji,
+          fileType: 'sticker',
+          stickerId: sticker.id,
+          stickerBg: sticker.bg
+        }],
+        currentUserId: currentUser?.id || currentUser?._id
+      });
+    } catch (err) {
+      console.error('Failed to send sticker:', err);
+    }
   };
 
   const handleSend = async (e) => {
@@ -246,24 +271,33 @@ export default function ChatRoom() {
                     {msg.attachments && msg.attachments.length > 0 && (
                       <div className="mt-2 space-y-1.5">
                         {msg.attachments.map((att, idx) => (
-                          <div key={idx} className="rounded-xl overflow-hidden bg-black/10 p-1.5">
-                            {att.fileType === 'image' ? (
-                              <img
-                                src={att.url}
-                                alt={att.name}
-                                className="max-h-44 max-w-full rounded-lg object-cover"
-                              />
+                          <div key={idx} className="rounded-xl overflow-hidden">
+                            {att.fileType === 'sticker' ? (
+                              <div className={`flex flex-col items-center justify-center p-3.5 rounded-2xl bg-gradient-to-tr ${att.stickerBg || 'from-indigo-500 to-purple-600'} text-white shadow-md select-none transform hover:scale-105 transition-all duration-200`}>
+                                <span className="text-5xl filter drop-shadow-md animate-bounce [animation-duration:2s]">{att.url}</span>
+                                <span className="text-[10px] font-extrabold mt-1 tracking-wider uppercase opacity-90">{att.name}</span>
+                              </div>
+                            ) : att.fileType === 'image' ? (
+                              <div className="bg-black/10 p-1.5 rounded-xl">
+                                <img
+                                  src={att.url}
+                                  alt={att.name}
+                                  className="max-h-44 max-w-full rounded-lg object-cover"
+                                />
+                              </div>
                             ) : (
-                              <a
-                                href={att.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={`flex items-center gap-1.5 text-xs font-medium hover:underline ${isMe ? 'text-blue-100' : 'text-indigo-600'
-                                  }`}
-                              >
-                                <FileText className="w-4 h-4 shrink-0" />
-                                <span className="truncate">{att.name}</span>
-                              </a>
+                              <div className="bg-black/10 p-1.5 rounded-xl">
+                                <a
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`flex items-center gap-1.5 text-xs font-medium hover:underline ${isMe ? 'text-blue-100' : 'text-indigo-600'
+                                    }`}
+                                >
+                                  <FileText className="w-4 h-4 shrink-0" />
+                                  <span className="truncate">{att.name}</span>
+                                </a>
+                              </div>
                             )}
                           </div>
                         ))}
@@ -440,11 +474,22 @@ export default function ChatRoom() {
             </button>
             <button
               type="button"
-              className="p-2 hover:text-indigo-600 hover:bg-slate-100 rounded-xl transition-colors"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              title="Emoji and Stickers"
+              className={`p-2 rounded-xl transition-colors ${showEmojiPicker ? 'text-indigo-600 bg-indigo-50' : 'hover:text-indigo-600 hover:bg-slate-100'}`}
             >
               <Smile className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Emoji & Sticker Picker Popover */}
+          {showEmojiPicker && (
+            <EmojiStickerPicker
+              onSelectEmoji={handleSelectEmoji}
+              onSelectSticker={handleSelectSticker}
+              onClose={() => setShowEmojiPicker(false)}
+            />
+          )}
 
           <button
             id="chat-send-message-btn"
