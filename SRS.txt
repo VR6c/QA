@@ -153,7 +153,10 @@ The application follows a modern decoupled Monorepo architecture:
   Title, Status, Owner, Environment) and inline action toggles.
 - REQ-VIEW-3 (Interactive Calendar View): Visual schedule planning view providing
   Day, Week, and Month presets, drag-and-drop date rescheduling, and timeline tracking.
-- REQ-VIEW-4 (Weekly & Monthly Performance Reporting Engine): Reporting module capable of:
+- REQ-VIEW-4 (Animated Segmented Tab Controls & View Transitions): Dynamic UI tab switcher
+  (`CustomTabs`) providing a liquid sliding white pill background indicator (`cubic-bezier(0.16,1,0.3,1)`),
+  icon scaling, active state color morphing, and smooth entrance view content animations (`.animate-tab-content-switch`).
+- REQ-VIEW-5 (Weekly & Monthly Performance Reporting Engine): Reporting module capable of:
   - Generating weekly/monthly metrics previews (`/api/reports/weekly/preview`, `/api/reports/monthly/preview`).
   - Editing GCIN notes (Good, Challenge, Improvement, Next Action).
   - Finalizing performance reports (`/api/reports/finalize`) which automatically claims and locks associated tasks.

@@ -10,6 +10,8 @@ import { getAllKpis, getTaskKpiCategory } from '../lib/kpiConstants';
 import { CustomSelect, CustomPagination, PageTransition } from './ui';
 import useUIStore from '../stores/uiStore';
 import useKPIStore from '../stores/kpiStore';
+import TestingTimerBadge from './TestingTimerBadge';
+import { useTasks } from '../hooks/useTasks';
 
 const statusBadgeStyles = {
   feedback: 'bg-rose-100 text-rose-700 border-rose-300 hover:bg-rose-200 focus:ring-2 focus:ring-rose-400 font-bold',
@@ -45,7 +47,11 @@ const envOptions = [
   'UAT'
 ];
 
-export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTask, onStatusChange }) {
+export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTask, onStatusChange, onStartTesting, onPauseTesting }) {
+  const { startTesting: startTestingApi, pauseTesting: pauseTestingApi } = useTasks();
+  const handleStartTesting = onStartTesting || ((id) => startTestingApi({ id }));
+  const handlePauseTesting = onPauseTesting || ((id, nextStatus) => pauseTestingApi({ id, nextStatus }));
+
   const { dashboardDensity } = useUIStore();
   const isCompact = dashboardDensity === 'compact';
   const cellPaddingClass = isCompact ? 'px-3 py-1.5' : 'px-4 py-3';
@@ -127,6 +133,7 @@ export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTas
     { key: 'datelineDeveloper', label: 'DateLine Dev', width: 'w-32 min-w-[110px]' },
     { key: 'datelineTesting', label: 'DateLine Testing', width: 'w-32 min-w-[110px]' },
     { key: 'status', label: 'Status', width: 'w-36 min-w-[130px]' },
+    { key: 'testingTimer', label: 'Testing Time', width: 'w-40 min-w-[140px]' },
     { key: 'pushTo', label: 'Push To', width: 'w-36 min-w-[130px]' },
     { key: 'reason', label: 'Reason / Notes', width: 'w-48 min-w-[160px]' },
     { key: 'timeline', label: 'Timeline', width: 'w-36 min-w-[120px]' },
@@ -269,6 +276,16 @@ export default function DataTable({ tasks = [], owners = [], onEdit, onUpdateTas
                       variant="outline"
                     />
                   </div>
+                </td>
+
+                {/* 5b. Testing Time / Live Timer */}
+                <td className={`${cellPaddingClass} whitespace-nowrap`} onClick={(e) => e.stopPropagation()}>
+                  <TestingTimerBadge
+                    task={task}
+                    onStartTesting={handleStartTesting}
+                    onPauseTesting={handlePauseTesting}
+                    variant="table"
+                  />
                 </td>
 
                 {/* 6. Push To */}

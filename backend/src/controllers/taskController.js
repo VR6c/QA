@@ -161,7 +161,7 @@ export const taskController = {
         updateData.title = trimmedTitle;
       }
 
-      // Automatically maintain completed_at timestamp on terminal status transition
+      // Automatically maintain completed_at timestamp & stop active testing timer on status transition
       if (updateData.status) {
         const isTerminalNow = ['success', 'done', 'done_production'].includes(updateData.status);
         const isTerminalBefore = ['success', 'done', 'done_production'].includes(currentTask.status);
@@ -169,6 +169,18 @@ export const taskController = {
           updateData.completed_at = new Date();
         } else if (!isTerminalNow && isTerminalBefore && !currentTask.kpi_claimed_month) {
           updateData.completed_at = null;
+        }
+
+        // If moving task away from testing (or stopping clock on status change) while testing_started_at is active
+        if (updateData.status !== 'testing' && currentTask.testing_started_at) {
+          const elapsed = Math.max(0, Math.floor((Date.now() - new Date(currentTask.testing_started_at).getTime()) / 1000));
+          updateData.testing_duration_seconds = (currentTask.testing_duration_seconds || 0) + elapsed;
+          updateData.testing_started_at = null;
+          updateData.testing_started_by = null;
+        } else if (updateData.status === 'testing' && !currentTask.testing_started_at) {
+          // If starting testing via status dropdown/drag-and-drop
+          updateData.testing_started_at = new Date();
+          updateData.testing_started_by = req.user?.name || req.user?.email || currentTask.owner || 'QA Tester';
         }
       }
 
@@ -297,6 +309,114 @@ export const taskController = {
     } catch (error) {
       console.error('Error seeding tasks:', error);
       return sendError(res, error.message || 'Failed to seed sample tasks', 500, 'ERR_INTERNAL');
+    }
+  },
+
+  // POST /api/tasks/:id/start-testing
+  startTesting: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const currentTask = await Task.findById(id);
+      if (!currentTask) {
+        return sendError(res, `Task with ID ${id} not found`, 404, 'ERR_NOT_FOUND');
+      }
+
+      const testerName = req.user?.name || req.user?.email || req.body?.tester_name || currentTask.owner || 'QA Tester';
+
+      // Single active task timer rule: auto-pause any existing active timer for this QA tester
+      const otherActiveTasks = await Task.find({
+        _id: { $ne: id },
+        testing_started_at: { $ne: null },
+        $or: [
+          { testing_started_by: testerName },
+          { owner: testerName },
+          { user: testerName }
+        ]
+      });
+
+      for (const otherTask of otherActiveTasks) {
+        const elapsed = Math.max(0, Math.floor((Date.now() - new Date(otherTask.testing_started_at).getTime()) / 1000));
+        otherTask.testing_duration_seconds = (otherTask.testing_duration_seconds || 0) + elapsed;
+        otherTask.testing_started_at = null;
+        otherTask.testing_started_by = null;
+        await otherTask.save();
+
+        recordActivity({
+          req,
+          module: 'Task Management',
+          action: 'TASK_TESTING_AUTO_PAUSED',
+          targetType: 'Task',
+          targetId: otherTask._id.toString(),
+          targetName: otherTask.title,
+          description: `Auto-paused active testing timer on "${otherTask.title}" because a new timer was started by ${testerName}`
+        });
+      }
+
+      // Start testing timer on target task
+      currentTask.status = 'testing';
+      currentTask.testing_started_at = new Date();
+      currentTask.testing_started_by = testerName;
+      await currentTask.save();
+
+      recordActivity({
+        req,
+        module: 'Task Management',
+        action: 'TASK_TESTING_STARTED',
+        targetType: 'Task',
+        targetId: currentTask._id.toString(),
+        targetName: currentTask.title,
+        description: `Started active testing timer for "${currentTask.title}"`
+      });
+
+      return sendSuccess(res, currentTask, null, `Started testing for "${currentTask.title}"`);
+    } catch (error) {
+      console.error('Error starting testing timer:', error);
+      return sendError(res, error.message || 'Failed to start testing timer', 500, 'ERR_INTERNAL');
+    }
+  },
+
+  // POST /api/tasks/:id/pause-testing
+  pauseTesting: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { nextStatus } = req.body || {};
+      const currentTask = await Task.findById(id);
+      if (!currentTask) {
+        return sendError(res, `Task with ID ${id} not found`, 404, 'ERR_NOT_FOUND');
+      }
+
+      if (currentTask.testing_started_at) {
+        const elapsed = Math.max(0, Math.floor((Date.now() - new Date(currentTask.testing_started_at).getTime()) / 1000));
+        currentTask.testing_duration_seconds = (currentTask.testing_duration_seconds || 0) + elapsed;
+        currentTask.testing_started_at = null;
+        currentTask.testing_started_by = null;
+      }
+
+      if (nextStatus) {
+        const isTerminalNow = ['success', 'done', 'done_production'].includes(nextStatus);
+        const isTerminalBefore = ['success', 'done', 'done_production'].includes(currentTask.status);
+        currentTask.status = nextStatus;
+        if (isTerminalNow && (!isTerminalBefore || !currentTask.completed_at)) {
+          currentTask.completed_at = new Date();
+        }
+      }
+
+      await currentTask.save();
+
+      recordActivity({
+        req,
+        module: 'Task Management',
+        action: 'TASK_TESTING_PAUSED',
+        targetType: 'Task',
+        targetId: currentTask._id.toString(),
+        targetName: currentTask.title,
+        description: `Paused testing timer for "${currentTask.title}"${nextStatus ? ` and updated status to ${nextStatus}` : ''}`
+      });
+
+      return sendSuccess(res, currentTask, null, `Paused testing timer for "${currentTask.title}"`);
+    } catch (error) {
+      console.error('Error pausing testing timer:', error);
+      return sendError(res, error.message || 'Failed to pause testing timer', 500, 'ERR_INTERNAL');
     }
   }
 };

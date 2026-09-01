@@ -38,7 +38,7 @@ const queryClient = new QueryClient({
 });
 
 function ControlCenterApp() {
-  const { tasks, isLoading, isFetching, error, refetch, createTask, updateTask, deleteTask, updateStatus } = useTasks();
+  const { tasks, isLoading, isFetching, error, refetch, createTask, updateTask, deleteTask, updateStatus, startTesting, pauseTesting } = useTasks();
   const showSkeleton = (isLoading || isFetching) && !error;
   const { owners, createOwner, updateOwner, deleteOwner } = useOwners();
 
@@ -322,6 +322,8 @@ function ControlCenterApp() {
                 onStatusChange={updateStatus}
                 onEdit={openModal}
                 onDelete={handleDeleteTask}
+                onStartTesting={(id) => startTesting({ id })}
+                onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
               />
             )}
 
@@ -332,6 +334,8 @@ function ControlCenterApp() {
                 onEdit={openModal}
                 onUpdateTask={(id, data) => updateTask({ id, data })}
                 onStatusChange={updateStatus}
+                onStartTesting={(id) => startTesting({ id })}
+                onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
               />
             )}
 

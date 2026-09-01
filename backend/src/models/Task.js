@@ -96,6 +96,20 @@ const taskSchema = new mongoose.Schema({
   delay_reason: {
     type: String,
     default: ''
+  },
+  testing_started_at: {
+    type: Date,
+    default: null,
+    index: true
+  },
+  testing_started_by: {
+    type: String,
+    default: null,
+    index: true
+  },
+  testing_duration_seconds: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true,

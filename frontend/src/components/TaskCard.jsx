@@ -14,6 +14,8 @@ import { format, parseISO } from 'date-fns';
 import { getAllKpis, getTaskKpiCategory } from '../lib/kpiConstants';
 import useKPIStore from '../stores/kpiStore';
 import { ConfirmPopover } from './ui';
+import TestingTimerBadge from './TestingTimerBadge';
+import { useTasks } from '../hooks/useTasks';
 
 const envStyles = {
   Development: 'bg-amber-100 text-amber-900 border-amber-300 font-bold',
@@ -39,7 +41,11 @@ const statusBorderColors = {
   backlog: 'border-l-sky-500 hover:border-l-sky-600 shadow-sky-500/5'
 };
 
-export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) {
+export default function TaskCard({ task, onEdit, onDelete, onStartTesting, onPauseTesting, isOverlay = false }) {
+  const { startTesting: startTestingApi, pauseTesting: pauseTestingApi } = useTasks();
+  const handleStartTesting = onStartTesting || ((id) => startTestingApi({ id }));
+  const handlePauseTesting = onPauseTesting || ((id, nextStatus) => pauseTestingApi({ id, nextStatus }));
+
   const taskId = String(task?.id || task?._id || '');
   const {
     attributes,
@@ -52,16 +58,16 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
 
   const style = isOverlay
     ? {
-        cursor: 'grabbing',
-        touchAction: 'none'
-      }
+      cursor: 'grabbing',
+      touchAction: 'none'
+    }
     : {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.35 : 1,
-        scale: isDragging ? 1.02 : 1,
-        touchAction: 'none'
-      };
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.35 : 1,
+      scale: isDragging ? 1.02 : 1,
+      touchAction: 'none'
+    };
 
   const formattedDate = (() => {
     try {
@@ -83,11 +89,10 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
       style={style}
       {...(isOverlay ? {} : attributes)}
       {...(isOverlay ? {} : listeners)}
-      className={`bg-white rounded-xl border p-3 transition-all duration-200 group relative border-l-[4px] ${cardBorderClass} ${
-        isOverlay 
-          ? 'shadow-2xl scale-[1.03] border-blue-400 ring-2 ring-blue-400/30 cursor-grabbing z-50 rotate-1' 
+      className={`bg-white rounded-xl border p-3 transition-all duration-200 group relative border-l-[4px] ${cardBorderClass} ${isOverlay
+          ? 'shadow-2xl scale-[1.03] border-blue-400 ring-2 ring-blue-400/30 cursor-grabbing z-50 rotate-1'
           : 'border-slate-200 shadow-xs hover:shadow-md hover:-translate-y-0.5 cursor-grab active:cursor-grabbing'
-      }`}
+        }`}
     >
       <div className="flex items-start justify-between gap-2">
 
@@ -154,8 +159,8 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
 
             {task.flowType && task.flowType !== 'none' && (
               <span className={`inline-flex items-center gap-1 px-1 py-0.5 rounded font-bold border text-[8px] ${task.flowType === 'monthly' ? 'bg-indigo-100 text-indigo-800 border-indigo-200' :
-                  task.flowType === 'weekly' ? 'bg-cyan-100 text-cyan-800 border-cyan-200' :
-                    'bg-purple-100 text-purple-800 border-purple-200'
+                task.flowType === 'weekly' ? 'bg-cyan-100 text-cyan-800 border-cyan-200' :
+                  'bg-purple-100 text-purple-800 border-purple-200'
                 }`}>
                 <Tag className="w-2 h-2 opacity-80" />
                 {task.flowType === 'monthly' && 'Monthly'}
@@ -188,6 +193,14 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
             </div>
           )}
 
+          {/* Active Testing Live Timer Badge */}
+          <TestingTimerBadge
+            task={task}
+            onStartTesting={handleStartTesting}
+            onPauseTesting={handlePauseTesting}
+            variant="card"
+          />
+
         </div>
 
         {/* Action Controls & Drag Handle */}
@@ -201,7 +214,7 @@ export default function TaskCard({ task, onEdit, onDelete, isOverlay = false }) 
           </div>
 
           {/* Quick Actions (Hover visible) */}
-          <div 
+          <div
             className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}

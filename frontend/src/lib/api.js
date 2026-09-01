@@ -135,6 +135,32 @@ export const api = {
     return res.json();
   },
 
+  async startTesting(id, testerName) {
+    const res = await fetch(`${API_BASE}/${id}/start-testing`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ tester_name: testerName })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to start testing timer'));
+    }
+    return res.json();
+  },
+
+  async pauseTesting(id, nextStatus) {
+    const res = await fetch(`${API_BASE}/${id}/pause-testing`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ nextStatus })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(extractError(err, 'Failed to pause testing timer'));
+    }
+    return res.json();
+  },
+
   async deleteTask(id) {
     const res = await fetch(`${API_BASE}/${id}`, {
       method: 'DELETE',

@@ -16,7 +16,7 @@ import useUIStore from '../stores/uiStore';
 
 const columnIds = ['backlog', 'progress', 'feedback', 'testing', 'success', 'done', 'done_production'];
 
-export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDelete }) {
+export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDelete, onStartTesting, onPauseTesting }) {
   const { dashboardDensity } = useUIStore();
   const isCompact = dashboardDensity === 'compact';
   const [activeTask, setActiveTask] = useState(null);
@@ -100,6 +100,8 @@ export default function KanbanBoard({ tasks = [], onStatusChange, onEdit, onDele
             tasks={groupedTasks[colId] || []}
             onEdit={onEdit}
             onDelete={onDelete}
+            onStartTesting={onStartTesting}
+            onPauseTesting={onPauseTesting}
           />
         ))}
       </div>

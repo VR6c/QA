@@ -62,14 +62,14 @@ const columnConfigs = {
   }
 };
 
-export default function KanbanColumn({ id, tasks = [], onEdit, onDelete }) {
+export default function KanbanColumn({ id, tasks = [], onEdit, onDelete, onStartTesting, onPauseTesting }) {
   const { setNodeRef, isOver } = useDroppable({ id });
   const config = columnConfigs[id] || columnConfigs.backlog;
   const taskIds = tasks.map(t => String(t.id || t._id));
 
   return (
     <div className={`snap-center min-w-[280px] sm:min-w-[300px] max-w-[320px] shrink-0 flex flex-col rounded-xl border overflow-hidden shadow-2xs ${config.columnBg}`}>
-      
+
       {/* Swimlane Header */}
       <div className={`px-3.5 py-3 border-b flex items-center justify-between ${config.headerBg}`}>
         <div className="flex items-center gap-2">
@@ -84,11 +84,10 @@ export default function KanbanColumn({ id, tasks = [], onEdit, onDelete }) {
       </div>
 
       {/* Droppable Swimlane Body */}
-      <div 
+      <div
         ref={setNodeRef}
-        className={`flex-1 p-2 space-y-2 min-h-[120px] max-h-[700px] max-h-[calc(100vh-220px)] overflow-y-auto pb-2 transition-colors ${
-          isOver ? 'bg-blue-50/60 ring-2 ring-blue-400 ring-inset' : ''
-        }`}
+        className={`flex-1 p-2 space-y-2 min-h-[120px] max-h-[700px] max-h-[calc(100vh-220px)] overflow-y-auto pb-2 transition-colors ${isOver ? 'bg-blue-50/60 ring-2 ring-blue-400 ring-inset' : ''
+          }`}
       >
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map((task) => (
@@ -97,6 +96,8 @@ export default function KanbanColumn({ id, tasks = [], onEdit, onDelete }) {
               task={task}
               onEdit={onEdit}
               onDelete={onDelete}
+              onStartTesting={onStartTesting}
+              onPauseTesting={onPauseTesting}
             />
           ))}
         </SortableContext>

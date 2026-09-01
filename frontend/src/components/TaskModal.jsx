@@ -14,6 +14,7 @@ import { getAllKpis } from '../lib/kpiConstants';
 import { CustomSelect, CustomDatePicker, CustomInput, CustomTextarea, CustomButton, ConfirmPopover } from './ui';
 import useAuthStore from '../stores/authStore';
 import useKPIStore from '../stores/kpiStore';
+import TestingTimerBadge from './TestingTimerBadge';
 
 const statusOptions = [
   { value: 'feedback', label: 'Feedback & Issue', color: 'bg-rose-500 text-white' },
@@ -289,6 +290,11 @@ export default function TaskModal({ isOpen, task, tasks = [], owners = [], onClo
                 </span>
               )}
             </div>
+            {task && (
+              <div className="mt-2">
+                <TestingTimerBadge task={task} variant="card" />
+              </div>
+            )}
           </div>
           <button
             onClick={onClose}

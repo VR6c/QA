@@ -53,6 +53,32 @@ export function useTasks() {
     }
   });
 
+  // Start Testing Mutation
+  const startTestingMutation = useMutation({
+    mutationFn: ({ id, testerName }) => api.startTesting(id, testerName),
+    onSuccess: (res) => {
+      const updated = res.data || res.task || res;
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.success(`⏱️ Testing timer active for: "${updated.title || 'Task'}"`);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to start testing timer');
+    }
+  });
+
+  // Pause Testing Mutation
+  const pauseTestingMutation = useMutation({
+    mutationFn: ({ id, nextStatus }) => api.pauseTesting(id, nextStatus),
+    onSuccess: (res) => {
+      const updated = res.data || res.task || res;
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast.info(`⏸️ Testing timer paused for: "${updated.title || 'Task'}"`);
+    },
+    onError: (err) => {
+      toast.error(err.message || 'Failed to pause testing timer');
+    }
+  });
+
   // Delete Task Mutation
   const deleteMutation = useMutation({
     mutationFn: (id) => api.deleteTask(id),
@@ -107,6 +133,8 @@ export function useTasks() {
     createTask: createMutation.mutateAsync,
     updateTask: updateMutation.mutateAsync,
     deleteTask: deleteMutation.mutateAsync,
+    startTesting: startTestingMutation.mutateAsync,
+    pauseTesting: pauseTestingMutation.mutateAsync,
     updateStatus,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
