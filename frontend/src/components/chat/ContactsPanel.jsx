@@ -36,6 +36,8 @@ export default function ContactsPanel() {
   const unreadCounts = useChatStore((state) => state.unreadCounts);
   const isLoadingUsers = useChatStore((state) => state.isLoadingUsers);
 
+  const typingUsers = useChatStore((state) => state.typingUsers);
+
   const filteredUsers = users.filter((u) => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return true;
@@ -88,7 +90,7 @@ export default function ContactsPanel() {
           ) : (
             filteredUsers.map((u) => {
               const isSelected = activeContactId === u.id;
-              const isOnline = onlineUserIds.has(u.id);
+              const isOnline = onlineUserIds.has(u.id) || Boolean(u.isOnline);
               const unread = unreadCounts[u.id] || 0;
               const initials = getInitials(u.name);
               const avatarColor = getAvatarColor(u.id);
@@ -141,9 +143,16 @@ export default function ContactsPanel() {
                     </div>
 
                     <div className="flex items-center justify-between gap-1">
-                      <p className="text-[11px] text-slate-500 truncate max-w-[140px]">
-                        {u.lastMessage ? u.lastMessage.text : u.role || 'Member'}
-                      </p>
+                      {typingUsers[u.id] ? (
+                        <span className="text-[11px] font-semibold text-indigo-600 animate-pulse flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-ping"></span>
+                          typing...
+                        </span>
+                      ) : (
+                        <p className="text-[11px] text-slate-500 truncate max-w-[140px]">
+                          {u.lastMessage ? u.lastMessage.text : u.role || 'Member'}
+                        </p>
+                      )}
 
                       {unread > 0 && (
                         <span className="shrink-0 bg-indigo-600 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-full min-w-[18px] text-center shadow-xs">

@@ -16,7 +16,8 @@ import {
   X,
   FileText,
   ArrowLeft,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react';
 import useChatStore from '../../stores/chatStore';
 import useAuthStore from '../../stores/authStore';
@@ -54,7 +55,7 @@ export default function ChatRoom() {
   const sendTypingStop = useChatStore((state) => state.sendTypingStop);
 
   const targetContact = users.find((u) => u.id === activeContactId);
-  const isOnline = activeContactId ? onlineUserIds.has(activeContactId) : false;
+  const isOnline = activeContactId ? (onlineUserIds.has(activeContactId) || Boolean(targetContact?.isOnline)) : false;
   const isTargetTyping = activeContactId ? !!typingUsers[activeContactId] : false;
 
   useEffect(() => {
@@ -120,7 +121,8 @@ export default function ChatRoom() {
 
       await sendMessage({
         text: inputText.trim(),
-        attachments
+        attachments,
+        currentUserId: currentUser?.id || currentUser?._id
       });
 
       setInputText('');
@@ -233,10 +235,10 @@ export default function ChatRoom() {
 
                 <div className={`flex flex-col max-w-[75%] ${isMe ? 'items-end' : 'items-start'}`}>
                   <div
-                    className={`rounded-2xl px-4 py-2.5 text-xs shadow-xs leading-relaxed ${isMe
+                    className={`rounded-2xl px-4 py-2.5 text-xs shadow-xs leading-relaxed transition-all duration-300 ${isMe
                       ? 'bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-br-xs'
                       : 'bg-white text-slate-800 border border-slate-200/70 rounded-bl-xs'
-                      }`}
+                      } ${msg.isPending || msg.status === 'sending' ? 'opacity-85 animate-pulse' : ''}`}
                   >
                     {msg.text && <p className="whitespace-pre-wrap break-words">{msg.text}</p>}
 
@@ -283,7 +285,12 @@ export default function ChatRoom() {
 
                     {isMe && (
                       <span className="inline-flex items-center ml-0.5">
-                        {msg.status === 'read' ? (
+                        {msg.isPending || msg.status === 'sending' ? (
+                          <span className="flex items-center gap-1 text-[10px] text-blue-500 font-semibold animate-pulse">
+                            <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                            <span>sending...</span>
+                          </span>
+                        ) : msg.status === 'read' ? (
                           <CheckCheck className="w-3.5 h-3.5 text-indigo-500" title="Read" />
                         ) : msg.status === 'delivered' ? (
                           <CheckCheck className="w-3.5 h-3.5 text-slate-400" title="Delivered" />
@@ -293,7 +300,7 @@ export default function ChatRoom() {
                       </span>
                     )}
 
-                    {(isMe || ['Super Admin', 'Admin'].includes(currentUser?.role)) && (
+                    {(isMe || ['Super Admin', 'Admin'].includes(currentUser?.role)) && !msg.isPending && (
                       <button
                         onClick={() => deleteMessage(msg.id)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity text-rose-500 hover:text-rose-700 ml-1.5"
@@ -312,6 +319,23 @@ export default function ChatRoom() {
               </div>
             );
           })
+        )}
+
+        {/* Animated 3-Dot Typing Indicator Bubble */}
+        {isTargetTyping && (
+          <div className="flex items-end gap-2 my-2 select-none animate-fade-in">
+            <div className="w-7 h-7 rounded-full bg-indigo-50 text-indigo-600 font-bold text-[10px] flex items-center justify-center border border-indigo-100 shrink-0">
+              {targetInitials}
+            </div>
+            <div className="bg-white border border-slate-200/80 rounded-2xl rounded-bl-xs px-4 py-2.5 shadow-xs flex items-center gap-2">
+              <div className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.32s]"></span>
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce [animation-delay:-0.16s]"></span>
+                <span className="w-1.5 h-1.5 bg-indigo-500 rounded-full animate-bounce"></span>
+              </div>
+              <span className="text-[11px] font-medium text-slate-400">{targetContact.name} is typing...</span>
+            </div>
+          </div>
         )}
         <div ref={messagesEndRef} />
       </div>

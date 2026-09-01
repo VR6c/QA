@@ -114,37 +114,77 @@ const useChatStore = create((set, get) => ({
     set({ unreadCounts: unreadMap });
   },
 
-  sendMessage: async ({ text, attachments }) => {
+  sendMessage: async ({ text, attachments, currentUserId }) => {
     const activeContactId = get().activeContactId;
     if (!activeContactId) return;
 
     const socket = getSocket();
     const cleanText = (text || '').trim();
 
-    if (socket && socket.connected) {
-      return new Promise((resolve, reject) => {
-        socket.emit('send_message', {
+    // 1. Create Optimistic Pending Message for Instant Display & Sending Animation
+    const tempId = 'temp-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const tempMsg = {
+      id: tempId,
+      senderId: currentUserId?.toString(),
+      receiverId: activeContactId.toString(),
+      text: cleanText,
+      attachments: attachments || [],
+      status: 'sending',
+      isPending: true,
+      createdAt: new Date().toISOString()
+    };
+
+    // Append temporary message immediately with sending animation state
+    set(state => ({ messages: [...state.messages, tempMsg] }));
+
+    try {
+      let serverMsg = null;
+
+      if (socket && socket.connected) {
+        serverMsg = await new Promise((resolve, reject) => {
+          socket.emit('send_message', {
+            receiverId: activeContactId,
+            text: cleanText,
+            attachments: attachments || []
+          }, (response) => {
+            if (response?.error) {
+              reject(new Error(response.error));
+            } else {
+              resolve(response?.message);
+            }
+          });
+        });
+      } else {
+        const res = await api.sendChatMessage({
           receiverId: activeContactId,
           text: cleanText,
           attachments: attachments || []
-        }, (response) => {
-          if (response?.error) {
-            reject(new Error(response.error));
-          } else {
-            resolve(response?.message);
-          }
         });
-      });
-    } else {
-      // Fallback via HTTP REST API
-      const res = await api.sendChatMessage({
-        receiverId: activeContactId,
-        text: cleanText,
-        attachments: attachments || []
-      });
-      const newMsg = res.data || res;
-      set((state) => ({ messages: [...state.messages, newMsg] }));
-      return newMsg;
+        serverMsg = res.data || res;
+      }
+
+      if (serverMsg) {
+        const normalizedMsg = {
+          ...serverMsg,
+          id: (serverMsg.id || serverMsg._id)?.toString(),
+          senderId: serverMsg.senderId?.toString(),
+          receiverId: serverMsg.receiverId?.toString()
+        };
+
+        // Replace temp message with server confirmed message
+        set(state => ({
+          messages: state.messages.map(m => m.id === tempId ? normalizedMsg : m)
+        }));
+      }
+
+      get().fetchUsers();
+      return serverMsg;
+    } catch (err) {
+      // Remove temp message if sending failed
+      set(state => ({
+        messages: state.messages.filter(m => m.id !== tempId)
+      }));
+      throw err;
     }
   },
 

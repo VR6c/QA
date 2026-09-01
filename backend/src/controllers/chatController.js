@@ -11,12 +11,15 @@ export const getSystemUsers = async (req, res) => {
   try {
     const currentUserId = req.user.id;
 
+    // Update current user's active timestamp
+    User.findByIdAndUpdate(currentUserId, { last_login_at: new Date() }).exec();
+
     // Fetch all active registered users excluding current user
     const users = await User.find({
       _id: { $ne: currentUserId },
       status: 'Active',
       deleted_at: null
-    }).select('name username email avatar role department position status').lean();
+    }).select('name username email avatar role department position status last_login_at updatedAt').lean();
 
     // Map each user with unread counts, presence, and last message info
     const userListWithDetails = await Promise.all(
@@ -40,6 +43,11 @@ export const getSystemUsers = async (req, res) => {
           lastMessage = await ChatMessage.findById(conversation.lastMessage).lean();
         }
 
+        // Determine if user is active (Socket connected OR active within last 4 minutes)
+        const lastActive = u.last_login_at || u.updatedAt;
+        const isActiveTimestamp = lastActive && (Date.now() - new Date(lastActive).getTime() <= 4 * 60 * 1000);
+        const isOnline = isUserOnline(uId) || Boolean(isActiveTimestamp);
+
         return {
           id: uId,
           name: u.name,
@@ -49,7 +57,7 @@ export const getSystemUsers = async (req, res) => {
           role: u.role,
           department: u.department,
           position: u.position,
-          isOnline: isUserOnline(uId),
+          isOnline,
           unreadCount,
           conversationId: conversation ? conversation._id.toString() : null,
           lastMessage: lastMessage ? {
