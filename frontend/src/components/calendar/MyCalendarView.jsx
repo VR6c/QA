@@ -26,7 +26,14 @@ import { CalendarWeekView } from './calendar-week-view';
 import { CalendarDayView } from './calendar-day-view';
 import useAuthStore from '../../stores/authStore';
 import useUIStore from '../../stores/uiStore';
-import { CustomSelect } from '../ui';
+import { CustomSelect, CustomTabs } from '../ui';
+
+const calendarTabs = [
+  { id: 'month', label: 'Month', icon: Grid },
+  { id: 'week', label: 'Week', icon: Columns },
+  { id: 'day', label: 'Day', icon: ListFilter },
+];
+
 import { isUserOwnerMatch } from '../../lib/kpiConstants';
 
 const STATUS_CONFIG = {
@@ -197,34 +204,15 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
         {/* Right View Switcher & Add Task Button */}
         <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2">
           {/* View Mode Selector (Month / Week / Day) */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 flex-1 sm:flex-initial justify-between sm:justify-start">
-            <button
-              onClick={() => setViewMode('month')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'month' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Grid className="w-3.5 h-3.5" />
-              Month
-            </button>
-
-            <button
-              onClick={() => setViewMode('week')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'week' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <Columns className="w-3.5 h-3.5" />
-              Week
-            </button>
-
-            <button
-              onClick={() => setViewMode('day')}
-              className={`flex items-center justify-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex-1 sm:flex-initial ${viewMode === 'day' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-            >
-              <ListFilter className="w-3.5 h-3.5" />
-              Day
-            </button>
-          </div>
+          <CustomTabs
+            tabs={calendarTabs}
+            activeTab={viewMode}
+            onChange={setViewMode}
+            variant="segment"
+            size="sm"
+            className="flex-1 sm:flex-initial justify-between sm:justify-start"
+            buttonClassName="flex-1 sm:flex-initial"
+          />
 
           <button
             onClick={() => handleAddTaskOnDate(selectedDateStr)}
@@ -278,35 +266,37 @@ export default function MyCalendarView({ tasks = [], owners = [] }) {
       {/* Main Calendar View Area + Agenda Panel Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Calendar View Component (Month, Week, or Day) */}
-        <div className="lg:col-span-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
-          {viewMode === 'month' && (
-            <CalendarMonthView
-              value={selectedDate}
-              onChange={setSelectedDate}
-              tasks={filteredTasks}
-              onSelectTask={handleSelectTask}
-              onAddTaskOnDate={handleAddTaskOnDate}
-            />
-          )}
+        <div className="lg:col-span-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
+          <div key={viewMode} className="animate-tab-content-switch">
+            {viewMode === 'month' && (
+              <CalendarMonthView
+                value={selectedDate}
+                onChange={setSelectedDate}
+                tasks={filteredTasks}
+                onSelectTask={handleSelectTask}
+                onAddTaskOnDate={handleAddTaskOnDate}
+              />
+            )}
 
-          {viewMode === 'week' && (
-            <CalendarWeekView
-              value={selectedDate}
-              onChange={setSelectedDate}
-              tasks={filteredTasks}
-              onSelectTask={handleSelectTask}
-              onAddTaskOnDate={handleAddTaskOnDate}
-            />
-          )}
+            {viewMode === 'week' && (
+              <CalendarWeekView
+                value={selectedDate}
+                onChange={setSelectedDate}
+                tasks={filteredTasks}
+                onSelectTask={handleSelectTask}
+                onAddTaskOnDate={handleAddTaskOnDate}
+              />
+            )}
 
-          {viewMode === 'day' && (
-            <CalendarDayView
-              value={selectedDate}
-              tasks={filteredTasks}
-              onSelectTask={handleSelectTask}
-              onAddTaskOnDate={handleAddTaskOnDate}
-            />
-          )}
+            {viewMode === 'day' && (
+              <CalendarDayView
+                value={selectedDate}
+                tasks={filteredTasks}
+                onSelectTask={handleSelectTask}
+                onAddTaskOnDate={handleAddTaskOnDate}
+              />
+            )}
+          </div>
         </div>
 
         {/* Selected Date Agenda Sidebar */}

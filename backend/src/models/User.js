@@ -26,6 +26,27 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Password is required'],
     minlength: 6
   },
+  phone: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  department: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  position: {
+    type: String,
+    default: '',
+    trim: true
+  },
+  bio: {
+    type: String,
+    default: '',
+    trim: true,
+    maxlength: 500
+  },
   status: {
     type: String,
     enum: ['Active', 'Inactive', 'Locked'],

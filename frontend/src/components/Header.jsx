@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner';
 import useUIStore from '../stores/uiStore';
 import useAuthStore from '../stores/authStore';
-import { CustomButton } from './ui';
+import { CustomButton, CustomTabs } from './ui';
 
 export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUserModal }) {
   const { view, setView, openModal } = useUIStore();
@@ -88,22 +88,18 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
           <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
 
             {/* View Switcher (Kanban / Table / Dashboard / Activity Log / Super Admin) */}
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/80 overflow-x-auto no-scrollbar scroll-smooth max-w-[52vw] sm:max-w-none shrink">
-              {views.filter(v => (!['admin', 'reports'].includes(v.id)) || isSuperAdmin).map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setView(id)}
-                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer whitespace-nowrap shrink-0 ${(view === id || (id === 'board' && view === 'kanban'))
-                    ? 'bg-white text-blue-600 shadow-xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
-                    }`}
-                  title={label}
-                >
-                  <Icon className="w-3.5 h-3.5 shrink-0" />
-                  <span className="hidden md:inline">{label}</span>
-                </button>
-              ))}
-            </div>
+            <CustomTabs
+              tabs={views
+                .filter(v => (!['admin', 'reports'].includes(v.id)) || isSuperAdmin)
+                .map(v => ({ id: v.id, label: v.label, icon: v.icon }))}
+              activeTab={view === 'kanban' ? 'board' : view}
+              onChange={setView}
+              variant="segment"
+              size="sm"
+              className="overflow-x-auto no-scrollbar scroll-smooth max-w-[52vw] sm:max-w-none shrink"
+              buttonClassName="shrink-0"
+              labelClassName="hidden md:inline"
+            />
 
             {/* + Add Task Button */}
             <CustomButton

@@ -178,7 +178,7 @@ export const createUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, username, email, role, status, role_id, avatar } = req.body;
+    const { name, username, email, phone, department, position, bio, role, status, role_id, avatar } = req.body;
 
     const user = await User.findOne({ _id: id, deleted_at: null });
     if (!user) {
@@ -210,6 +210,10 @@ export const updateUser = async (req, res) => {
     }
 
     if (name) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (department !== undefined) user.department = department;
+    if (position !== undefined) user.position = position;
+    if (bio !== undefined) user.bio = bio;
     if (avatar !== undefined) user.avatar = avatar;
 
 

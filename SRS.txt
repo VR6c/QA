@@ -1,9 +1,9 @@
 ================================================================================
-SOFTWARE REQUIREMENTS SPECIFICATION (SRS v2.0)
+SOFTWARE REQUIREMENTS SPECIFICATION (SRS v2.2)
 QA & Product Engineering Control Center
 ================================================================================
-Document Version: 2.0.0
-Last Updated: August 31, 2026
+Document Version: 2.2.0
+Last Updated: September 1, 2026
 Author: Antigravity AI Engineering Team
 
 --------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ Author: Antigravity AI Engineering Team
 1.1 Purpose
 This Software Requirements Specification (SRS) document details the functional,
 non-functional, interface, and architectural requirements for the QA & Product
-Engineering Control Center (v2.0). It serves as the single source of truth for
+Engineering Control Center (v2.2). It serves as the single source of truth for
 software engineers, quality assurance personnel, system administrators, and
 product management stakeholders.
 
@@ -21,18 +21,23 @@ product management stakeholders.
 The QA & Product Engineering Control Center (PECC) is an enterprise-grade SaaS
 web application designed to streamline quality assurance workflows, task
 lifecycle tracking, product engineering delivery, role-based access governance,
-and executive performance analytics.
+automated performance reporting, deadline scheduling, and executive performance
+analytics.
 
 Key capabilities include:
-- A 6-swimlane drag-and-drop Kanban workflow board.
+- A 6-swimlane drag-and-drop Kanban workflow board with optimistic updates.
 - An interactive, sortable data table for high-density task management.
-- Real-time executive KPI dashboards with automated target evaluation (Good vs.
+- An Interactive Calendar View supporting Day, Week, and Month scheduling modes
+  with dynamic sliding animated tab controls, view content transitions, and drag-and-drop deadline planning.
+- An Automated Weekly & Monthly IMP Performance Reporting Engine with draft previews,
+  GCIN notes (Good, Challenge, Improvement, Next Action), report finalization, and
+  immutable task locking.
+- Real-time executive KPI dashboards with dynamic target evaluation (Good vs.
   Excellence thresholds).
-- Role-Based Access Control (RBAC) with granular user permissions, role
-  management, and strict data isolation.
+- Role-Based Access Control (RBAC) with granular user permissions, custom role
+  management, and strict user-level data isolation.
 - An immutable audit trail system for governance and compliance.
-- System-wide feature configuration and multi-environment tracking (Development,
-  TestFlight, UAT, Production).
+- Global System Configuration Engine and Owner Governance Management.
 
 1.3 Definitions, Acronyms, and Abbreviations
 - PECC: Product Engineering Control Center
@@ -43,6 +48,7 @@ Key capabilities include:
 - IMP: Key Performance Indicator tracking system for quality assurance milestones
 - ODM: Object Document Mapper (Mongoose for MongoDB)
 - UAT: User Acceptance Testing
+- GCIN: Good, Challenge, Improvement, Next Action reporting framework
 
 --------------------------------------------------------------------------------
 2. OVERALL DESCRIPTION
@@ -51,41 +57,44 @@ Key capabilities include:
 2.1 Product Architecture Overview
 The application follows a modern decoupled Monorepo architecture:
 - Frontend Layer: React 19 SPA powered by Vite, Tailwind CSS v4, Zustand state
-  management, and TanStack Query v5 for asynchronous data fetching and cache
-  management.
+  management, TanStack Query v5, custom animated segmented tab controls (`CustomTabs`) with
+  fluid sliding pill background indicators (`cubic-bezier(0.16,1,0.3,1)`), and smooth view entrance transitions.
 - Backend Layer: Node.js & Express.js REST API with modular controllers,
-  middlewares, and services.
-- Database Layer: MongoDB v7+ with Mongoose schemas supporting single-tenant or
-  tenant-scoped data isolation.
+  middlewares (Auth, RBAC Guard, Rate Limiter, Tenant Handler), and services.
+- Database Layer: MongoDB v7+ with Mongoose schemas supporting tenant-scoped
+  and user-isolated data persistence across 8 core models.
 
-+--------------------------------------------------------+
-|                   React 19 SPA (Vite)                  |
-|   (Kanban Board, Data Table, KPI Dashboard, Admin UI)  |
-+---------------------------+----------------------------+
-                            | REST API (JSON)
-+---------------------------v----------------------------+
-|                  Express.js API Backend                |
-|  (Auth, RBAC Guard, Rate Limiter, Audit Logger Engine) |
-+---------------------------+----------------------------+
-                            | Mongoose ODM
-+---------------------------v----------------------------+
-|                    MongoDB Database                    |
-|   (Tasks, Users, Roles, Permissions, Logs, Settings)   |
-+--------------------------------------------------------+
++--------------------------------------------------------------------+
+|                         React 19 SPA (Vite)                        |
+|  (Kanban Board, Data Table, Calendar, Reports, KPI, Admin Suite)   |
++---------------------------------+----------------------------------+
+                                  | REST API (JSON)
++---------------------------------v----------------------------------+
+|                        Express.js API Backend                      |
+|  (Auth Guard, RBAC Middleware, Rate Limiter, Audit Logger Engine)  |
++---------------------------------+----------------------------------+
+                                  | Mongoose ODM
++---------------------------------v----------------------------------+
+|                          MongoDB Database                          |
+|  (Tasks, Users, Roles, Permissions, ActivityLogs, Settings,        |
+|   Owners, Reports)                                                 |
++--------------------------------------------------------------------+
 
 2.2 User Classes and Roles
 
 1. Super Admin:
-   Full root access to Admin Panel, User Management, Role/Permission Configuration,
-   System Settings, Data Exporters, and Global Audit Logs.
+   Full root access across all system modules: Admin Panel, User Management,
+   Role/Permission Configuration, System Settings, Owner Governance, Data Exporters,
+   Audit Logs, and Task Unlocking.
 
 2. Admin / QA Lead:
-   Access to all task boards, metric cards, team tasks across all owners, KPI
-   trackers, and CSV export tools.
+   Access to all task boards, metrics, team tasks across all owners, KPI trackers,
+   weekly/monthly report previews and finalizations, custom KPI configuration, and CSV exports.
 
 3. Tester / Employee:
    Restricted access to personal tasks (strict user-level data isolation),
-   drag-and-drop status changes, profile update, and individual KPI submission.
+   drag-and-drop status changes, personal profile management, calendar schedule,
+   and individual KPI submissions.
 
 2.3 Operating Environment
 - Client Requirements: Modern Evergreen Web Browsers (Chrome 110+, Edge 110+,
@@ -105,18 +114,22 @@ The application follows a modern decoupled Monorepo architecture:
   a signed JSON Web Token (JWT) containing user ID, role, and permissions.
 - REQ-AUTH-3 (Session Hydration): Front-end store (authStore) shall validate
   existing tokens on boot (/api/auth/me) and populate user state.
-- REQ-AUTH-4 (User Profile & Avatar): Users shall be able to view their profile,
+- REQ-AUTH-4 (User Profile Governance): Users shall be able to view their profile,
+  edit personal information (full name, username, email, phone number, department, position, bio),
   change passwords, and select/upload an avatar image.
+- REQ-AUTH-5 (Last Login Tracking): System shall update `last_login_at` timestamp
+  in User document upon successful authentication.
 
 3.2 Task Management & Workflow Engine
 - REQ-TASK-1 (Task Lifecycle Swimlanes): System shall categorize tasks across 6
-  defined workflow swimlanes:
+  defined primary workflow swimlanes:
   1. Feedback & Issue (feedback)
   2. In Progress (progress)
   3. Testing / QA (testing)
   4. QA Success (success)
   5. Done / Deployed (done)
   6. Backlog / Pending (backlog)
+  System also supports extended status tag `done_production`.
 - REQ-TASK-2 (Task Drag-and-Drop): Users shall be able to drag cards between
   swimlanes using @dnd-kit with optimistic UI updates and instant API status
   synchronizations.
@@ -126,42 +139,61 @@ The application follows a modern decoupled Monorepo architecture:
   (quick_test, finding_product_error, conduct_testing, new_idea, research_template).
 - REQ-TASK-5 (Owner Allocation): Tasks can be assigned to designated owners/team
   members with role tags and custom color themes.
+- REQ-TASK-6 (Deadlines & Delay Reason): Tasks support explicit developer datelines
+  (`datelineDeveloper`), testing datelines (`datelineTesting`), overall due dates
+  (`due_date`), completion timestamps (`completed_at`), and delay explanations (`delay_reason`).
+- REQ-TASK-7 (Task Locking Engine): Tasks claimed within a finalized report
+  (`kpi_claimed_report_id`, `kpi_claimed_month`) are immutably locked against
+  editing or deletion. Unlocking requires explicit authorization via `/api/reports/unlock-task/:taskId`.
 
 3.3 Interactive Views & Analytics
 - REQ-VIEW-1 (Kanban Board): High-level visual column layout with quick status
-  transitions, search filtering, and task details modals.
+  transitions, search filtering, and task detail modals.
 - REQ-VIEW-2 (Sortable Data Table): Compact grid view with column sorting (Date,
   Title, Status, Owner, Environment) and inline action toggles.
-- REQ-VIEW-3 (Executive KPI Dashboard): Visual analytics center rendering:
+- REQ-VIEW-3 (Interactive Calendar View): Visual schedule planning view providing
+  Day, Week, and Month presets, drag-and-drop date rescheduling, and timeline tracking.
+- REQ-VIEW-4 (Weekly & Monthly Performance Reporting Engine): Reporting module capable of:
+  - Generating weekly/monthly metrics previews (`/api/reports/weekly/preview`, `/api/reports/monthly/preview`).
+  - Editing GCIN notes (Good, Challenge, Improvement, Next Action).
+  - Finalizing performance reports (`/api/reports/finalize`) which automatically claims and locks associated tasks.
+  - Viewing past report history and performance tier ratings (Good vs. Excellence).
+- REQ-VIEW-5 (Executive KPI Dashboard & Goal Tracker): Visual analytics center rendering:
   - Task Status Distribution (Donut Chart)
   - Environment Breakdown (Bar Chart)
   - Daily Volume Activity (Area Chart)
   - Column Capacity Load (Bar Chart)
-- REQ-VIEW-4 (IMP Goal Tracker & Custom KPI Modal): Interactive tracker
-  comparing user metrics against Good vs. Excellence performance targets.
+  - IMP Performance Targets comparisons with custom threshold modal.
 
 3.4 Data Filtering & Export System
 - REQ-FILTER-1 (Multi-Criteria Filtering): System must support real-time composite
   filtering by text query (Title, Reason, Remark), Status, Push-To Environment,
-  Owner, KPI Category, Date Range, and Month Tabs (12 months of 2026).
+  Owner / My Tasks, KPI Category, Date Range (with Quick Presets), and Month Tabs.
 - REQ-FILTER-2 (CSV Exporter): Users can export filtered tasks into standard
-  .csv format containing full task schema attributes.
+  .csv format containing full task schema attributes (including completion date,
+  datelines, delay reasons, and KPI categories).
 
 3.5 Role-Based Access Control (RBAC) & Governance
 - REQ-RBAC-1 (Granular Permission Checks): Endpoints must enforce RBAC middleware
-  (checkPermission('module.action')).
-- REQ-RBAC-2 (Role Management): Super Admins can create custom roles with tailored
-  permission lists (e.g., user.view, role.edit).
+  (`requirePermission('module.action')`).
+- REQ-RBAC-2 (Permission Matrix): Fine-grained permission codes enforced across modules:
+  - User Management: `user.view`, `user.create`, `user.edit`, `user.status`, `user.delete`, `user.reset_password`
+  - Role Management: `role.view`, `role.create`, `role.edit`, `role.status`, `role.delete`, `role.permission`
+  - System Settings: `setting.view`, `setting.edit`, `setting.toggle`
+  - Activity Logs: `activity.view`
 - REQ-RBAC-3 (Data Isolation): Non-admin users are strictly isolated to view and
   edit only tasks created by or assigned to themselves.
 - REQ-RBAC-4 (Immutable Audit Logging): All administrative and state-changing
-  actions (USER_CREATED, ROLE_PERMISSIONS_CHANGED, SETTING_DISABLED) are recorded
-  with user metadata, IP address, timestamp, and before/after state diffs.
+  actions (USER_CREATED, ROLE_PERMISSIONS_CHANGED, SETTING_DISABLED, REPORT_FINALIZED) are recorded
+  in ActivityLog with user metadata, IP address, user agent, timestamp, and before/after diffs.
 
-3.6 System Settings
-- REQ-SETTING-1 (Global Configuration): System configuration keys stored in MongoDB
+3.6 System Configuration & Owner Governance
+- REQ-SETTING-1 (Global Configuration Engine): System configuration keys stored in MongoDB
   (Setting model) control global application behaviors, feature toggles, security
-  parameters, and UI defaults.
+  parameters, and UI defaults across categories (General, User, Security, Notification, Feature).
+- REQ-OWNER-1 (Owner & Team Member Management): Super Admins can manage team member profiles
+  (Owner model) with avatar links, roles, default flags, and color themes (`blue`, `purple`,
+  `emerald`, `amber`, `rose`, `indigo`, `cyan`, `teal`, `slate`).
 
 --------------------------------------------------------------------------------
 4. NON-FUNCTIONAL REQUIREMENTS
@@ -171,7 +203,7 @@ The application follows a modern decoupled Monorepo architecture:
 - NFR-PERF-1: Backend API endpoints shall respond in less than 150ms under normal
   operating load (100 concurrent requests).
 - NFR-PERF-2: Frontend UI rendering shall maintain 60 FPS during drag-and-drop
-  operations.
+  operations on Kanban board and Calendar.
 - NFR-PERF-3: Client state query caching (staleTime: 30000ms) prevents unnecessary
   re-fetching while allowing instant background refetch on user interaction.
 
@@ -198,60 +230,152 @@ The application follows a modern decoupled Monorepo architecture:
   title: String (required, max 5000),
   status: Enum ['feedback', 'progress', 'testing', 'success', 'done', 'done_production', 'backlog'],
   pushTo: Enum ['Development', 'Production', 'TestFlight', 'UAT'],
-  reason: String,
-  timeline: String,
-  remark: String,
+  reason: String (max 5000),
+  timeline: String (max 2000),
+  remark: String (max 5000),
   date: String (YYYY-MM-DD),
   flowType: Enum ['none', 'monthly', 'weekly', 'yearly'],
   flowValue: String,
   kpiCategory: String,
   user: String,
   owner: String,
+  completed_at: Date (default: null),
+  kpi_claimed_month: String (default: null),
+  kpi_claimed_report_id: ObjectId (ref: 'Report', default: null),
+  due_date: String (default: null),
+  datelineDeveloper: String,
+  datelineTesting: String,
+  delay_reason: String,
   timestamps: true
 }
 
 5.2 User Model (User)
 {
-  name: String (required),
-  username: String (required, unique),
-  email: String (required, unique),
-  password: String (hashed),
+  name: String (required, max 100),
+  username: String (required, unique, lowercase),
+  email: String (required, unique, lowercase),
+  password: String (hashed, minlength 6),
+  phone: String (default: ''),
+  department: String (default: ''),
+  position: String (default: ''),
+  bio: String (default: '', max 500),
   status: Enum ['Active', 'Inactive', 'Locked'],
   role_id: ObjectId (ref: 'Role'),
-  role: String,
+  role: String (default: 'Employee'),
   avatar: String,
-  last_login_at: Date,
+  last_login_at: Date (default: null),
+  created_by: String (default: 'System'),
+  updated_by: String (default: 'System'),
+  deleted_at: Date (default: null),
   timestamps: true
 }
 
 5.3 Role Model (Role)
 {
-  name: String (required, unique),
-  code: String (required, unique),
+  name: String (required, unique, max 100),
+  code: String (required, unique, lowercase),
   description: String,
   status: Enum ['Active', 'Inactive'],
-  is_system_role: Boolean,
-  permissions: [String], // Array of permission codes like 'user.view', 'role.edit'
+  is_system_role: Boolean (default: false),
+  permissions: [String], // e.g. ['user.view', 'role.edit', 'setting.toggle']
+  created_by: String (default: 'System'),
+  updated_by: String (default: 'System'),
   timestamps: true
 }
 
 5.4 Activity Log Model (ActivityLog)
 {
   activity_id: String (required, unique),
-  user_id: String,
-  user_name: String,
+  user_id: String (default: 'System'),
+  user_name: String (default: 'System User'),
   user_email: String,
-  role_name: String,
-  module: String,
-  action: String,
+  role_name: String (default: 'Super Admin'),
+  module: String (required), // e.g. 'User Management', 'Role Management', 'System Settings', 'Reports'
+  action: String (required), // e.g. 'USER_CREATED', 'ROLE_PERMISSIONS_CHANGED', 'SETTING_DISABLED', 'REPORT_FINALIZED'
   target_type: String,
   target_id: String,
   target_name: String,
-  description: String,
-  old_value: Mixed,
-  new_value: Mixed,
-  ip_address: String,
+  description: String (required),
+  old_value: Mixed (default: null),
+  new_value: Mixed (default: null),
+  ip_address: String (default: '127.0.0.1'),
+  user_agent: String (default: 'Browser/Client'),
   status: Enum ['Success', 'Failed', 'Denied'],
+  timestamps: true
+}
+
+5.5 Owner Model (Owner)
+{
+  name: String (required, unique, max 100),
+  role: String (default: 'Team Member', max 100),
+  color: Enum ['blue', 'purple', 'emerald', 'amber', 'rose', 'indigo', 'cyan', 'teal', 'slate'],
+  avatar: String,
+  isDefault: Boolean (default: false),
+  timestamps: true
+}
+
+5.6 Permission Model (Permission)
+{
+  name: String (required),
+  code: String (required, unique, lowercase), // Format: module.action (e.g. 'user.view', 'user.create')
+  module: String (required), // e.g. 'User Management', 'Role Management', 'System Settings', 'Activity Log'
+  action: String (required), // e.g. 'view', 'create', 'edit', 'delete', 'status', 'toggle'
+  description: String,
+  timestamps: true
+}
+
+5.7 Setting Model (Setting)
+{
+  key: String (required, unique),
+  name: String (required),
+  category: Enum ['General', 'User', 'Security', 'Notification', 'Feature'],
+  value: Mixed (required),
+  value_type: Enum ['boolean', 'string', 'number', 'json'],
+  scope: Enum ['Global', 'Role', 'User'],
+  status: Enum ['Enabled', 'Disabled'],
+  description: String,
+  updated_by: String (default: 'Super Admin'),
+  timestamps: true
+}
+
+5.8 Report Model (Report)
+{
+  title: String (required),
+  type: Enum ['weekly', 'monthly'],
+  period: String (required), // e.g. '2026-W35' or '2026-08'
+  startDate: String (default: null),
+  endDate: String (default: null),
+  owner: String (default: 'All'),
+  status: Enum ['draft', 'finalized'],
+  gcin: {
+    good: [String],
+    challenge: [String],
+    improvement: [String],
+    nextAction: [String]
+  },
+  task_ids: [ObjectId (ref: 'Task')],
+  metrics: {
+    quick_test: Number,
+    finding_error: Number,
+    conduct_testing: Number,
+    new_idea: Number,
+    research_doc: Number,
+    timeliness: { on_time: Number, over_deadline: Number }
+  },
+  kpi_targets: Mixed (default: null),
+  performance_tier: {
+    quick_test: String,
+    finding_error: String,
+    conduct_testing: String,
+    new_idea: String,
+    research_doc: String,
+    overall: String
+  },
+  challenges_success_stories: {
+    challenges: String,
+    successStories: String
+  },
+  created_by: String (default: 'System'),
   timestamps: true
 }
 
@@ -259,14 +383,19 @@ The application follows a modern decoupled Monorepo architecture:
 6. VERIFICATION & ACCEPTANCE CRITERIA
 --------------------------------------------------------------------------------
 
-1. Task Operations: Successful creation, modification, status transition via
-   drag-and-drop, and deletion of tasks with live UI update.
-2. Security & RBAC: Verification that regular non-admin users cannot access
-   administrative endpoints (/api/admin/*) or view tasks belonging to other users.
-3. Audit Trail: Verification that any administrative role change or setting toggle
-   creates an immutable entry in the ActivityLog collection.
-4. KPI Analytics: Verification that task KPI metrics correctly map to user goal
-   targets and update donut/bar charts dynamically.
+1. Task Operations & Locking: Successful creation, modification, status transition
+   via drag-and-drop, and deletion of tasks. Tasks claimed in finalized reports must
+   reject updates unless unlocked via `/api/reports/unlock-task/:taskId`.
+2. Calendar & Scheduling: Verification that tasks render accurately across Day,
+   Week, and Month calendar modes according to developer/testing datelines and due dates.
+3. Reporting Engine: Verification that weekly and monthly report previews calculate
+   metrics dynamically, save GCIN notes, and lock tasks upon finalization.
+4. Security & RBAC: Verification that regular non-admin users cannot access
+   administrative endpoints (`/api/admin/*`) or view tasks belonging to other users.
+5. Immutable Audit Trail: Verification that any administrative role change, setting
+   toggle, or report finalization creates an entry in the ActivityLog collection.
+6. System Settings & Owners: Verification that setting toggles dynamically reflect
+   system capabilities and team owner badges maintain assigned color themes.
 
 ================================================================================
 END OF DOCUMENT

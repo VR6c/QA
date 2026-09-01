@@ -2,8 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   LuX, 
   LuUser, 
+  LuAtSign,
+  LuMail,
+  LuPhone,
+  LuBuilding,
+  LuBriefcase,
+  LuFileText,
   LuUpload, 
-  LuLink, 
   LuLayoutGrid as LuGrid, 
   LuCheck, 
   LuShieldCheck, 
@@ -49,9 +54,14 @@ export default function ProfileModal() {
 
   // Profile Form States
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [department, setDepartment] = useState('');
+  const [position, setPosition] = useState('');
+  const [bio, setBio] = useState('');
   const [avatar, setAvatar] = useState('');
-  const [avatarTab, setAvatarTab] = useState('preset'); // 'preset' | 'upload' | 'url'
-  const [customUrl, setCustomUrl] = useState('');
+  const [avatarTab, setAvatarTab] = useState('preset'); // 'preset' | 'upload'
   const [dragActive, setDragActive] = useState(false);
 
   // Password Change Form States
@@ -68,13 +78,18 @@ export default function ProfileModal() {
   useEffect(() => {
     if (user) {
       setName(user.name || '');
+      setUsername(user.username || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setDepartment(user.department || '');
+      setPosition(user.position || '');
+      setBio(user.bio || '');
       setAvatar(user.avatar || '');
       if (user.avatar && !user.avatar.includes('dicebear')) {
         if (user.avatar.startsWith('data:image')) {
           setAvatarTab('upload');
         } else {
-          setAvatarTab('url');
-          setCustomUrl(user.avatar);
+          setAvatarTab('preset');
         }
       } else {
         setAvatarTab('preset');
@@ -145,11 +160,38 @@ export default function ProfileModal() {
       toast.error('Full name is required.');
       return;
     }
+    if (!username.trim()) {
+      toast.error('Username is required.');
+      return;
+    }
+    if (username.trim().length < 3) {
+      toast.error('Username must be at least 3 characters long.');
+      return;
+    }
+    if (!/^[a-z0-9_.-]+$/i.test(username.trim())) {
+      toast.error('Username can only contain letters, numbers, dots, hyphens, and underscores.');
+      return;
+    }
+    if (!email.trim()) {
+      toast.error('Email address is required.');
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       await updateProfile({
         name: name.trim(),
+        username: username.trim().toLowerCase(),
+        email: email.trim().toLowerCase(),
+        phone: phone.trim(),
+        department: department.trim(),
+        position: position.trim(),
+        bio: bio.trim(),
         avatar: avatar
       });
       toast.success('Profile updated successfully!');
@@ -308,28 +350,150 @@ export default function ProfileModal() {
                     {user.role}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 truncate mt-0.5">{user.email}</p>
-                <p className="text-[11px] text-slate-400 mt-1 font-mono">@{user.username || 'username'}</p>
+                <p className="text-xs text-slate-500 truncate mt-0.5">{email || user.email}</p>
+                <p className="text-[11px] text-slate-400 mt-1 font-mono">@{username || user.username || 'username'}</p>
               </div>
             </div>
 
-            {/* Display Name Input */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Full Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                  <LuUser className="w-4 h-4" />
+            {/* Personal Details Form Section */}
+            <div className="space-y-4">
+              {/* Row 1: Full Name & Username */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuUser className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Enter full name"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      required
+                    />
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter your full name"
-                  className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                  required
-                />
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Username
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuAtSign className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Enter username"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-mono text-xs"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Email Address & Phone Number */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuMail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuPhone className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 000-0000"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Department & Job Position */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Department
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuBuilding className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={department}
+                      onChange={(e) => setDepartment(e.target.value)}
+                      placeholder="e.g. Quality Assurance"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Job Title / Position
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                      <LuBriefcase className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="text"
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      placeholder="e.g. Senior QA Engineer"
+                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 4: Bio / About Me */}
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                  Bio / About Me
+                </label>
+                <div className="relative">
+                  <div className="absolute top-3 left-3 flex items-start pointer-events-none text-slate-400">
+                    <LuFileText className="w-4 h-4" />
+                  </div>
+                  <textarea
+                    rows={2}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Brief description about yourself..."
+                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+                  />
+                </div>
               </div>
             </div>
 
@@ -363,18 +527,6 @@ export default function ProfileModal() {
                   >
                     <LuUpload className="w-3.5 h-3.5" />
                     Upload
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setAvatarTab('url')}
-                    className={`flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold rounded-md transition-all cursor-pointer ${
-                      avatarTab === 'url'
-                        ? 'bg-white text-blue-600 shadow-xs'
-                        : 'text-slate-500 hover:text-slate-800'
-                    }`}
-                  >
-                    <LuLink className="w-3.5 h-3.5" />
-                    Image URL
                   </button>
                 </div>
               </div>
@@ -446,37 +598,6 @@ export default function ProfileModal() {
                 </div>
               )}
 
-              {/* Tab 3: Custom Image URL */}
-              {avatarTab === 'url' && (
-                <div className="space-y-3">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                      <LuLink className="w-4 h-4" />
-                    </div>
-                    <input
-                      type="url"
-                      value={customUrl}
-                      onChange={(e) => {
-                        setCustomUrl(e.target.value);
-                        setAvatar(e.target.value);
-                      }}
-                      placeholder="https://example.com/my-photo.jpg"
-                      className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                    />
-                  </div>
-                  {customUrl && (
-                    <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-200/80">
-                      <img
-                        src={customUrl}
-                        alt="URL Preview"
-                        onError={() => toast.error('Failed to load image from URL')}
-                        className="w-8 h-8 rounded-lg object-cover bg-slate-200"
-                      />
-                      <span className="text-xs text-slate-600 truncate flex-1">{customUrl}</span>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Form Actions */}

@@ -238,18 +238,67 @@ export const triggerSeed = async (req, res) => {
 // Update Current Logged-in User Profile
 export const updateProfile = async (req, res) => {
   try {
-    const { name, avatar } = req.body;
+    const { name, username, email, phone, department, position, bio, avatar } = req.body;
     const user = await User.findById(req.user.id);
     if (!user) {
       return sendError(res, 'User not found.', 404, 'ERR_NOT_FOUND');
     }
 
+    // Name
     if (name !== undefined && name.trim()) {
       user.name = name.trim();
     }
-    if (avatar !== undefined) {
-      user.avatar = avatar;
+
+    // Username
+    if (username !== undefined && username.trim()) {
+      const formattedUsername = username.trim().toLowerCase();
+      if (formattedUsername.length < 3) {
+        return sendError(res, 'Username must be at least 3 characters long.', 400, 'ERR_VALIDATION');
+      }
+      if (!/^[a-z0-9_.-]+$/.test(formattedUsername)) {
+        return sendError(res, 'Username can only contain lowercase letters, numbers, dots, hyphens, and underscores.', 400, 'ERR_VALIDATION');
+      }
+
+      if (formattedUsername !== user.username) {
+        const existingUsername = await User.findOne({
+          username: formattedUsername,
+          _id: { $ne: user._id }
+        }).lean();
+
+        if (existingUsername) {
+          return sendError(res, 'Username is already taken by another user.', 400, 'ERR_DUPLICATE');
+        }
+        user.username = formattedUsername;
+      }
     }
+
+    // Email
+    if (email !== undefined && email.trim()) {
+      const formattedEmail = email.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formattedEmail)) {
+        return sendError(res, 'Please provide a valid email address.', 400, 'ERR_VALIDATION');
+      }
+
+      if (formattedEmail !== user.email) {
+        const existingEmail = await User.findOne({
+          email: formattedEmail,
+          _id: { $ne: user._id }
+        }).lean();
+
+        if (existingEmail) {
+          return sendError(res, 'Email address is already in use by another account.', 400, 'ERR_DUPLICATE');
+        }
+        user.email = formattedEmail;
+      }
+    }
+
+    // Optional Personal Fields
+    if (phone !== undefined) user.phone = phone.trim();
+    if (department !== undefined) user.department = department.trim();
+    if (position !== undefined) user.position = position.trim();
+    if (bio !== undefined) user.bio = bio.trim();
+    if (avatar !== undefined) user.avatar = avatar;
 
     user.updated_by = user.name;
     await user.save();
@@ -265,7 +314,7 @@ export const updateProfile = async (req, res) => {
       targetType: 'User',
       targetId: user._id.toString(),
       targetName: user.name,
-      description: `Updated profile details/avatar for ${user.name}`
+      description: `Updated personal profile details for ${user.name} (@${user.username})`
     });
 
     return sendSuccess(res, { user: user.toJSON() }, null, 'Profile updated successfully!');
