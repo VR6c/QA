@@ -144,8 +144,10 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
     const flowTasks = activeTasks.filter(t => t.flowType && t.flowType !== 'none');
 
     const byFlowType = {
+      daily: flowTasks.filter(t => t.flowType === 'daily'),
       weekly: flowTasks.filter(t => t.flowType === 'weekly'),
       monthly: flowTasks.filter(t => t.flowType === 'monthly'),
+      quarterly: flowTasks.filter(t => t.flowType === 'quarterly'),
       yearly: flowTasks.filter(t => t.flowType === 'yearly')
     };
 
@@ -154,6 +156,38 @@ export default function ImpKpiTracker({ tasks = [], owners = [] }) {
       byFlowType
     };
   }, [activeTasks]);
+
+  // Compute Team Person-by-Person KPI Matrix data
+  const teamMatrixData = useMemo(() => {
+    return ownerNames.map(ownerName => {
+      const personTasks = tasks.filter(t => isUserOwnerMatch(t.owner, ownerName));
+      const kpisMap = {};
+
+      allKpiDefs.forEach(kpi => {
+        const count = personTasks.filter(t => getTaskKpiCategory(t) === kpi.id).length;
+        const targetInfo = getResolvedTarget(ownerName, kpi.id, kpi.goodTarget, kpi.excellenceTarget);
+        const goodTarget = targetInfo.goodTarget;
+        const excellenceTarget = targetInfo.excellenceTarget;
+
+        const isExcellence = count >= excellenceTarget && excellenceTarget > 0;
+        const isGood = !isExcellence && count >= goodTarget && goodTarget > 0;
+
+        kpisMap[kpi.id] = {
+          count,
+          goodTarget,
+          excellenceTarget,
+          isExcellence,
+          isGood
+        };
+      });
+
+      return {
+        ownerName,
+        taskCount: personTasks.length,
+        kpisMap
+      };
+    });
+  }, [ownerNames, tasks, allKpiDefs, getResolvedTarget]);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-6">
