@@ -355,6 +355,96 @@ const useChatStore = create((set, get) => ({
         messages: state.messages.filter(m => m.id !== messageId)
       }));
     });
+  },
+
+  // Production Real-time Smart Sync Polling Engine (Fallback when Socket.io is disconnected/serverless)
+  syncIntervalId: null,
+
+  startRealtimeSync: (currentUserId) => {
+    if (get().syncIntervalId) clearInterval(get().syncIntervalId);
+
+    const syncFn = async () => {
+      try {
+        const { activeContactId, messages, unreadCounts, isOpen } = get();
+
+        // 1. Silent Users List & Unread Counts Fetch
+        const userRes = await api.getChatUsers();
+        const userList = userRes.data || userRes || [];
+
+        const nextUnreadMap = {};
+        let newUnreadSender = null;
+
+        userList.forEach(u => {
+          const uId = u.id?.toString();
+          const count = u.unreadCount || 0;
+          nextUnreadMap[uId] = count;
+
+          const oldCount = unreadCounts[uId] || 0;
+          if (count > oldCount && uId !== activeContactId?.toString()) {
+            newUnreadSender = u;
+          }
+        });
+
+        set({ users: userList, unreadCounts: nextUnreadMap });
+
+        if (newUnreadSender) {
+          playNotificationSound();
+          showNativeNotification(`Message from ${newUnreadSender.name}`, {
+            body: newUnreadSender.lastMessage?.text || 'Sent an attachment',
+            icon: newUnreadSender.avatar || '/favicon.ico'
+          });
+
+          if (!isOpen || activeContactId !== newUnreadSender.id) {
+            toast(`💬 ${newUnreadSender.name}`, {
+              description: newUnreadSender.lastMessage?.text || 'Sent an attachment',
+              action: {
+                label: 'Reply',
+                onClick: () => {
+                  set({ isOpen: true });
+                  get().selectContact(newUnreadSender.id);
+                }
+              }
+            });
+          }
+        }
+
+        // 2. Silent Active Chat Room Message Sync
+        if (activeContactId) {
+          const msgRes = await api.getChatMessages({ targetUserId: activeContactId });
+          const payload = msgRes.data || msgRes;
+          const freshMessages = payload.messages || [];
+
+          if (freshMessages.length > messages.length) {
+            const latestMsg = freshMessages[freshMessages.length - 1];
+            const latestSenderId = latestMsg.senderId?.toString();
+            const myId = currentUserId?.toString();
+
+            if (latestSenderId !== myId) {
+              const lastMsgInState = messages[messages.length - 1];
+              if (!lastMsgInState || lastMsgInState.id !== latestMsg.id) {
+                playNotificationSound();
+              }
+            }
+
+            set({ messages: freshMessages });
+          }
+        }
+      } catch (err) {
+        // Silent catch for background sync
+      }
+    };
+
+    syncFn();
+    const intervalId = setInterval(syncFn, 3000);
+    set({ syncIntervalId: intervalId });
+  },
+
+  stopRealtimeSync: () => {
+    const intervalId = get().syncIntervalId;
+    if (intervalId) {
+      clearInterval(intervalId);
+      set({ syncIntervalId: null });
+    }
   }
 }));
 

@@ -53,6 +53,8 @@ function ControlCenterApp() {
 
   const setupSocketListeners = useChatStore((state) => state.setupSocketListeners);
   const fetchUsers = useChatStore((state) => state.fetchUsers);
+  const startRealtimeSync = useChatStore((state) => state.startRealtimeSync);
+  const stopRealtimeSync = useChatStore((state) => state.stopRealtimeSync);
 
   const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
 
@@ -60,16 +62,21 @@ function ControlCenterApp() {
     checkAuth();
   }, [checkAuth]);
 
-  // Socket.io Lifecycle and Chat Listener Setup (REQ-CHAT-2.1)
+  // Real-time Chat Lifecycle (Sockets + Production Serverless Smart Polling Fallback)
   useEffect(() => {
     if (isAuthenticated && token && currentUser) {
       const socket = connectSocket(token);
       const currentUserId = (currentUser.id || currentUser._id)?.toString();
       setupSocketListeners(socket, currentUserId);
       fetchUsers();
+      startRealtimeSync(currentUserId);
     } else {
       disconnectSocket();
+      stopRealtimeSync();
     }
+    return () => {
+      stopRealtimeSync();
+    };
   }, [isAuthenticated, token, currentUser]);
 
   const {
