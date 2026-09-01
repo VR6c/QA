@@ -26,9 +26,9 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
   const { view, setView, openModal } = useUIStore();
   const { user, isAuthenticated, logout, openLoginModal, openProfileModal } = useAuthStore();
 
-  
+
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  
+
   const userMenuRef = useRef(null);
 
   const isSuperAdmin = user?.role === 'Super Admin';
@@ -79,7 +79,7 @@ export default function Header({ tasks = [], onExportCSV, onSync, onOpenCreateUs
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-normal hidden sm:block">
-                Product Engineering & Quality Control Dashboard
+                Product & Quality Controller
               </p>
             </div>
           </div>

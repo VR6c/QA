@@ -6,12 +6,12 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 font-medium">
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-          <span>Live Sync active • Connected to MongoDB Engine</span>
+          <span>Live Sync active • Every Thing is Possible</span>
         </div>
         <div className="flex items-center gap-4 text-slate-400">
-          <span>QA & Product Engineering Control Center</span>
+          <span>Made For Product Team - By Thary-Vireak</span>
           <span className="font-mono text-[11px] bg-slate-100 px-2 py-0.5 rounded text-slate-600 border border-slate-200">
-            v2.5.5 - Aug 2026
+            v2.6.1 - 09/01/2026
           </span>
         </div>
       </div>
