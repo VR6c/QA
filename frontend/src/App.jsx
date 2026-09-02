@@ -1,8 +1,9 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster, toast } from 'sonner';
 import { useTasks } from './hooks/useTasks';
 import { useOwners } from './hooks/useOwners';
+import { useFilteredTasks } from './hooks/useFilteredTasks';
 import useUIStore from './stores/uiStore';
 import useAuthStore from './stores/authStore';
 import Header from './components/Header';
@@ -10,27 +11,24 @@ import MetricCards from './components/MetricCards';
 import FilterBar from './components/FilterBar';
 import KanbanBoard from './components/KanbanBoard';
 import DataTable from './components/DataTable';
-import KPIDashboard from './components/KPIDashboard';
-import MyCalendarView from './components/calendar/MyCalendarView';
-import AuditLogViewer from './components/admin/AuditLogViewer';
-import ReportsDashboard from './components/reports/ReportsDashboard';
 import TaskModal from './components/TaskModal';
 import OwnerManagementModal from './components/OwnerManagementModal';
 import LoginModal from './components/LoginModal';
 import CreateUserModal from './components/CreateUserModal';
 import ProfileModal from './components/ProfileModal';
-import SuperAdminShell from './components/admin/SuperAdminShell';
 import ChatLauncher from './components/chat/ChatLauncher';
 import ChatModal from './components/chat/ChatModal';
 import useChatStore from './stores/chatStore';
 import { connectSocket, disconnectSocket } from './lib/socket';
-
 import Footer from './components/Footer';
 import ViewSkeleton, { MetricCardsSkeleton, FilterBarSkeleton } from './components/ViewSkeleton';
-import { getTaskKpiCategory, isUserOwnerMatch } from './lib/kpiConstants';
 
-
-
+// Code-split heavy views for faster initial page render
+const KPIDashboard = lazy(() => import('./components/KPIDashboard'));
+const MyCalendarView = lazy(() => import('./components/calendar/MyCalendarView'));
+const AuditLogViewer = lazy(() => import('./components/admin/AuditLogViewer'));
+const ReportsDashboard = lazy(() => import('./components/reports/ReportsDashboard'));
+const SuperAdminShell = lazy(() => import('./components/admin/SuperAdminShell'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -119,89 +117,8 @@ function ControlCenterApp() {
     }
   }, [view]);
 
-  // Filter tasks based on active FilterBar & selectedMonth
-  const filteredTasks = useMemo(() => {
-    const isSuperAdmin = currentUser?.role === 'Super Admin' || currentUser?.role === 'QA Lead' || currentUser?.role === 'Admin';
-    const isBoardView = view === 'board' || view === 'kanban';
-
-    return tasks.filter(task => {
-
-      // 0. Data Isolation Rule for Regular Users: Task created by or assigned to User A
-      if (!isSuperAdmin && currentUser?.name) {
-        const isCreator = isUserOwnerMatch(task.user, currentUser.name);
-        const isOwner = isUserOwnerMatch(task.owner, currentUser.name);
-        if (!isCreator && !isOwner) return false;
-      }
-
-      // 1. Search Query Filter (title, reason, remark)
-      if (filters.search.trim()) {
-        const query = filters.search.toLowerCase().trim();
-        const titleMatch = (task.title || '').toLowerCase().includes(query);
-        const reasonMatch = (task.reason || '').toLowerCase().includes(query);
-        const remarkMatch = (task.remark || '').toLowerCase().includes(query);
-        if (!titleMatch && !reasonMatch && !remarkMatch) return false;
-      }
-
-      // 2. Status Filter
-      if (filters.status !== 'all' && task.status !== filters.status) {
-        return false;
-      }
-
-      // 3. Environment Filter
-      if (filters.environment !== 'all' && task.pushTo !== filters.environment) {
-        return false;
-      }
-
-      // 4. Task Owner Filter (Owner is purely a name tag for remarking on tasks)
-      if (filters.owner && filters.owner !== 'all') {
-        if (filters.owner === 'my_tasks') {
-          if (!currentUser?.name || (!isUserOwnerMatch(task.owner, currentUser.name) && !isUserOwnerMatch(task.user, currentUser.name))) return false;
-        } else {
-          if (!isUserOwnerMatch(task.owner, filters.owner)) return false;
-        }
-      }
-
-
-      // 5. KPI Category Filter
-      if (filters.kpiCategory && filters.kpiCategory !== 'all') {
-        const taskCategory = getTaskKpiCategory(task);
-        if (taskCategory !== filters.kpiCategory) return false;
-      }
-
-      // 6. Date Range, Quick Date, & Selected Month Filters (Excluding IMP Flow & Backlog / Pending tasks ONLY in Board view)
-      const isImpFlow = Boolean(task.flowType && task.flowType !== 'none');
-      const isBacklogPending = task.status === 'backlog';
-      const isExcludedFromDateFilter = isBoardView && (isImpFlow || isBacklogPending);
-
-      if (!isExcludedFromDateFilter) {
-        const isCustomDateRange = (filters.dateStart && filters.dateStart !== '2025-07-01') || (filters.dateEnd && filters.dateEnd !== '2026-12-31');
-        if (filters.dateStart && task.date && task.date < filters.dateStart) return false;
-        if (filters.dateEnd && task.date && task.date > filters.dateEnd) return false;
-
-        // 7. Quick Date Pill Filter
-        if (filters.quickDate && task.date !== filters.quickDate) return false;
-
-        // 8. Selected Month Filter
-        if (!isCustomDateRange && selectedMonth && selectedMonth !== 'all' && task.date) {
-          if (!task.date.startsWith(selectedMonth)) return false;
-        }
-      }
-
-      // 9. IMP Flow Type Filter
-      if (filters.flowType && filters.flowType !== 'all') {
-        const taskFlowType = task.flowType || 'none';
-        if (taskFlowType !== filters.flowType) return false;
-      }
-
-      // 10. IMP Flow Value Filter
-      if (filters.flowValue && filters.flowValue !== 'all') {
-        const taskFlowValue = task.flowValue || '';
-        if (taskFlowValue !== filters.flowValue) return false;
-      }
-
-      return true;
-    });
-  }, [tasks, filters, selectedMonth, currentUser, view]);
+  // Filter tasks using custom hook
+  const filteredTasks = useFilteredTasks(tasks, filters, selectedMonth, currentUser, view);
 
   // CSV Data Export
   const handleExportCSV = () => {
@@ -276,11 +193,11 @@ function ControlCenterApp() {
   // If Super Admin view is selected and user is strictly a Super Admin, render full-screen Super Admin Panel
   if (view === 'admin' && currentUser?.role === 'Super Admin') {
     return (
-      <>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-semibold">Loading Admin Console...</div>}>
         <SuperAdminShell onBackToApp={() => useUIStore.getState().setView('board')} currentUser={currentUser} />
         <LoginModal />
         <Toaster position="bottom-right" richColors />
-      </>
+      </Suspense>
     );
   }
 
@@ -325,7 +242,6 @@ function ControlCenterApp() {
           <ViewSkeleton view={view} />
         )}
 
-
         {/* Error State */}
         {error && isTaskView && (
           <div className="py-12 bg-rose-50 border border-rose-200 rounded-xl text-center text-rose-700 space-y-2 p-6">
@@ -342,46 +258,48 @@ function ControlCenterApp() {
 
         {/* Active View Display */}
         {!showSkeleton && (
-          <div key={view} className="pt-1 animate-fade-in-up">
-            {(view === 'board' || view === 'kanban') && (
-              <KanbanBoard
-                tasks={filteredTasks}
-                onStatusChange={updateStatus}
-                onEdit={openModal}
-                onDelete={handleDeleteTask}
-                onStartTesting={(id) => startTesting({ id })}
-                onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
-              />
-            )}
+          <Suspense fallback={<ViewSkeleton view={view} />}>
+            <div key={view} className="pt-1 animate-fade-in-up">
+              {(view === 'board' || view === 'kanban') && (
+                <KanbanBoard
+                  tasks={filteredTasks}
+                  onStatusChange={updateStatus}
+                  onEdit={openModal}
+                  onDelete={handleDeleteTask}
+                  onStartTesting={(id) => startTesting({ id })}
+                  onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
+                />
+              )}
 
-            {view === 'table' && (
-              <DataTable
-                tasks={filteredTasks}
-                owners={owners}
-                onEdit={openModal}
-                onUpdateTask={(id, data) => updateTask({ id, data })}
-                onStatusChange={updateStatus}
-                onStartTesting={(id) => startTesting({ id })}
-                onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
-              />
-            )}
+              {view === 'table' && (
+                <DataTable
+                  tasks={filteredTasks}
+                  owners={owners}
+                  onEdit={openModal}
+                  onUpdateTask={(id, data) => updateTask({ id, data })}
+                  onStatusChange={updateStatus}
+                  onStartTesting={(id) => startTesting({ id })}
+                  onPauseTesting={(id, nextStatus) => pauseTesting({ id, nextStatus })}
+                />
+              )}
 
-            {view === 'dashboard' && (
-              <KPIDashboard tasks={filteredTasks} owners={owners} />
-            )}
+              {view === 'dashboard' && (
+                <KPIDashboard tasks={filteredTasks} owners={owners} />
+              )}
 
-            {view === 'calendar' && (
-              <MyCalendarView tasks={tasks} owners={owners} />
-            )}
+              {view === 'calendar' && (
+                <MyCalendarView tasks={tasks} owners={owners} />
+              )}
 
-            {view === 'reports' && (
-              <ReportsDashboard owners={owners} />
-            )}
+              {view === 'reports' && (
+                <ReportsDashboard owners={owners} />
+              )}
 
-            {view === 'activity' && (
-              <AuditLogViewer />
-            )}
-          </div>
+              {view === 'activity' && (
+                <AuditLogViewer />
+              )}
+            </div>
+          </Suspense>
         )}
 
       </main>
